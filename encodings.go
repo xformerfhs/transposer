@@ -56,7 +56,7 @@ const (
 	copyBom BomHandling = iota
 	// noBom means that the output file must not have a BOM.
 	noBom
-	// withBom means that the output file has a BOM.
+	// withBom means that the output file must have a BOM.
 	withBom
 )
 
