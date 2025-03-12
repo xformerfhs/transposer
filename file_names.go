@@ -26,6 +26,8 @@
 //    2025-01-02: V1.0.0: Created.
 //
 
+// File file_names contains the functions that handle file names in the main program.
+
 package main
 
 import (

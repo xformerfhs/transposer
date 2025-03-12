@@ -1,5 +1,5 @@
 //
-// SPDX-FileCopyrightText: Copyright 2024 Frank Schwab
+// SPDX-FileCopyrightText: Copyright 2024-2025 Frank Schwab
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -25,6 +25,8 @@
 // Change history:
 //    2024-12-29: V1.0.0: Created.
 //
+
+// File error contains the functions that handle errors in the main program.
 
 package main
 

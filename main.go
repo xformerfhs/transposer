@@ -1,3 +1,33 @@
+//
+// SPDX-FileCopyrightText: Copyright 2025 Frank Schwab
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// SPDX-FileType: SOURCE
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// You may not use this file except in compliance with the License.
+//
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Author: Frank Schwab
+//
+// Version: 1.0.0
+//
+// Change history:
+//    2025-03-12: V1.0.0: Created.
+//
+
+// This is the main program file.
+
 package main
 
 import (
@@ -16,21 +46,30 @@ import (
 
 // ******** Private constants ********
 
+// maxFileSize is the maximum size of a text file.
 const maxFileSize = 10_000_000
 
+// fmtEncodedFileOperation contains the format for encoded file operation messages.
 const fmtEncodedFileOperation = `%s file '%s' with %s encoding`
 
+// myVersion contains the version of this program. Update it, when anything changes.
 const myVersion = `1.0.0`
+
+// mainMsgBase is the base number for program messages.
 const mainMsgBase = 10
 
+// myName contains the name of the executable of this program.
 var myName = filehelper.RealBaseName(os.Args[0])
 
 // ******** Main functions ********
 
+// main is the main program, but it is only a stub that calls the real main program
+// in order to have return codes and still obey defers.
 func main() {
 	os.Exit(realMain())
 }
 
+// realMain is the real main program.
 func realMain() int {
 	// 1. Process commands.
 	defineCommandlineFlags()
