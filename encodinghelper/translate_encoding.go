@@ -1,0 +1,139 @@
+//
+// SPDX-FileCopyrightText: Copyright 2024 Frank Schwab
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// SPDX-FileType: SOURCE
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// You may not use this file except in compliance with the License.
+//
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Author: Frank Schwab
+//
+// Version: 1.1.0
+//
+// Change history:
+//    2024-03-10: V1.0.0: Created.
+//    2025-01-09: V1.0.1: Simplified sort call.
+//    2025-02-16: V1.1.0: Simplified name normalization.
+//    2025-03-09: V2.0.0: Expose NormalizeEncoding.
+//
+
+package encodinghelper
+
+import (
+	"fmt"
+	"golang.org/x/text/encoding"
+	"strings"
+	"transposer/maphelper"
+	"transposer/stringhelper"
+	"unicode"
+)
+
+// ******** Public functions ********
+
+// TranslateEncoding translates a character encoding text into an encoding.Encoding
+// with the given BOM usage.
+func TranslateEncoding(encodingName string, useBom bool) (encoding.Encoding, string, error) {
+	enc, exists := textToEncoding[encodingName]
+	if !exists {
+		return nil, ``, fmt.Errorf(`invalid character encoding: '%s'`, encodingName)
+	}
+
+	resultEncoding := enc.encoding
+	if resultEncoding == nil {
+		resultEncoding = EncodingWithBomHandling(encodingName, useBom)
+	}
+
+	return resultEncoding, enc.name, nil
+}
+
+// EncodingNames returns the list of encodings as text.
+func EncodingNames() []string {
+	keys := maphelper.SortedKeys(textToEncoding)
+
+	result := make([]string, len(keys))
+	for i, k := range keys {
+		result[i] = fmt.Sprintf(`%-13s: %s`, k, textToEncoding[k].name)
+	}
+
+	return result
+}
+
+// IsValidEncoding reports whether the supplied encoding is valid.
+func IsValidEncoding(charEncoding string) bool {
+	_, exists := textToEncoding[charEncoding]
+	return exists
+}
+
+// NormalizeEncoding normalizes the encoding text, so it is all lower case, contains no separators
+// and has a unique way to specify 'win' and 'cp'.
+func NormalizeEncoding(charEncoding string) string {
+	normalizedEncoding := cleanEncodingText(charEncoding)
+
+	// Change "macintoshx" to "macx". No other transformation is needed in this case.
+	if strings.HasPrefix(normalizedEncoding, `macintosh`) {
+		normalizedEncoding = `mac` + normalizedEncoding[9:]
+		return normalizedEncoding
+	}
+
+	// The following cases are mutually exclusive, so they are put into a switch statement.
+	switch {
+	// Remove "ibm" from "ibmcodepage###".
+	case strings.HasPrefix(normalizedEncoding, `ibm`):
+		normalizedEncoding = normalizedEncoding[3:]
+
+	// Change "windowsx" to "winx".
+	case strings.HasPrefix(normalizedEncoding, `windows`):
+		normalizedEncoding = `win` + normalizedEncoding[7:]
+	}
+
+	// The following statements clean up special cases that may are produced by the previous ones.
+
+	// Change "wincodepagex" to "codepagex".
+	if strings.HasPrefix(normalizedEncoding, `wincodepage`) {
+		normalizedEncoding = normalizedEncoding[3:]
+	}
+
+	// Change "codepagex" to "cpx".
+	if strings.HasPrefix(normalizedEncoding, `codepage`) {
+		normalizedEncoding = `cp` + normalizedEncoding[8:]
+	}
+
+	return normalizedEncoding
+}
+
+// ******** Private functions ********
+
+var cleanBuilder stringhelper.Builder
+
+// cleanEncodingText converts an encoding specification into all lower-case and removes all separators.
+func cleanEncodingText(charEncoding string) string {
+	cleanBuilder.Ensure(len(charEncoding))
+	cleanBuilder.Reset()
+
+	for _, r := range charEncoding {
+		if r != '-' && r != '_' && r != '.' && r != ' ' {
+			_, _ = cleanBuilder.WriteRune(unicode.ToLower(r))
+		}
+	}
+
+	resultString := cleanBuilder.String()
+
+	// utf16 has to be mapped to utf16le, as this is the default UTF-16 encoding on Windows.
+	if resultString == `utf16` {
+		resultString = `utf16le`
+	}
+
+	return resultString
+}

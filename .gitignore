@@ -1,0 +1,7 @@
+.idea
+transposer*
+
+*.zip
+*.zipx
+*.json
+*.exe
