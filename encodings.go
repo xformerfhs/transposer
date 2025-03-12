@@ -122,6 +122,10 @@ func bomSettings(encodingName string) (string, BomHandling) {
 		}
 	}
 
+	if len(encodingName) == 0 {
+		encodingName = encodinghelper.PlatformDefaultEncodingName()
+	}
+
 	return encodingName, handleBom
 }
 
