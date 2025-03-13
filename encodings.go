@@ -35,6 +35,7 @@ import (
 	"fmt"
 	"strings"
 	"transposer/encodinghelper"
+	"transposer/stringhelper"
 )
 
 // ******** Private types ********
@@ -66,7 +67,7 @@ const (
 // for input and output encoding, the BOM handling to be used and the BOM bytes
 // if a BOM should be set on output.
 func GetEncodings(fileEncoding string) (string, string, BomHandling, error) {
-	elements := strings.Split(fileEncoding, `:`)
+	elements := stringhelper.SplitAny(fileEncoding, `:,`)
 	elementsLength := len(elements)
 
 	if elementsLength < 1 {

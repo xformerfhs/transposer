@@ -205,7 +205,7 @@ func checkCommand() (bool, int, bool) {
 // passwords by starting them with an upper-case letter and then continuing with lower
 // case letters, which would effectively remove one letter from the password strength.
 func getPasswords(password string) ([]string, error) {
-	elements := strings.Split(password, `:`)
+	elements := stringhelper.SplitAny(password, `:,`)
 	result := make([]string, len(elements))
 	for i, candidate := range elements {
 		if !stringhelper.IsAlphaNumeric(candidate) {
