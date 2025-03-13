@@ -66,7 +66,7 @@ const (
 // for input and output encoding, the BOM handling to be used and the BOM bytes
 // if a BOM should be set on output.
 func GetEncodings(fileEncoding string) (string, string, BomHandling, error) {
-	elements := strings.Split(fileEncoding, `:`)
+	elements := strings.FieldsFunc(fileEncoding, separatorFunc)
 	elementsLength := len(elements)
 
 	if elementsLength < 1 {
@@ -124,6 +124,11 @@ func bomSettings(encodingName string) (string, BomHandling) {
 
 	if len(encodingName) == 0 {
 		encodingName = encodinghelper.PlatformDefaultEncodingName()
+	}
+
+	// "utf16" should be the same as "utf16le".
+	if encodingName == `utf16` {
+		encodingName = `utf16le`
 	}
 
 	return encodingName, handleBom
