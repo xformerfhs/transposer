@@ -13,19 +13,21 @@ func SplitAny(source string, separators string) []string {
 		return explode(source)
 	}
 
-	result := make([]string, 0, countAny(source, separators)+1)
+	result := make([]string, countAny(source, separators)+1)
 
+	i := 0
 	for {
 		pos := strings.IndexAny(source, separators)
 		if pos == -1 {
 			break
 		}
 
-		result = append(result, source[:pos])
+		result[i] = source[:pos]
 		source = source[pos+1:]
+		i++
 	}
 
-	result = append(result, source)
+	result[i] = source
 
 	return result
 }
