@@ -146,8 +146,8 @@ func printUsageFunction() {
 	_, _ = fmt.Fprintln(w)
 	_, _ = fmt.Fprintf(w, "Maximum file size is %s bytes.\n", numberformat.FormatInt(maxFileSize))
 	_, _ = fmt.Fprintln(w, `Output is written to the {inputFilepath} with '_trans' or '_untrans' added to the file name.`)
-	_, _ = fmt.Fprintln(w, `The passwords are separated by ':' or ','.`)
-	_, _ = fmt.Fprintln(w, `The encoding can be specified for the input and output file separately, separated by ':' or ','.`)
+	_, _ = fmt.Fprintln(w, `The passwords are separated by ':'.`)
+	_, _ = fmt.Fprintln(w, `The encoding can be specified for the input and output file separately, separated by ':'.`)
 	_, _ = fmt.Fprintln(w, `If the output encoding is not specified it is the same as the input encoding.`)
 	_, _ = fmt.Fprintln(w, "\nEncoding may be any of the following:")
 
