@@ -108,7 +108,7 @@ func normalizeAndCheckEncodingName(encodingName string) (string, BomHandling, er
 }
 
 // bomSettings returns the BOM settings for the given encoding name, cuts off 'bom' and 'nobom'
-// suffixes and returns their values as bom handling values.
+// suffixes and returns their values as BOM handling values.
 func bomSettings(encodingName string) (string, BomHandling) {
 	handleBom := copyBom
 

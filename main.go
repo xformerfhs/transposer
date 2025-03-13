@@ -39,7 +39,7 @@ import (
 	"transposer/encodinghelper"
 	"transposer/filehelper"
 	"transposer/logger"
-	"transposer/slicehelper"
+	"transposer/mathhelper"
 	"transposer/stringhelper"
 	"transposer/transposition"
 )
@@ -94,6 +94,10 @@ func realMain() int {
 	}
 
 	// 2. Process command line arguments.
+	if !checkPasswords(passwords) {
+		return rcParameterError
+	}
+
 	var inputEncodingName string
 	var outputEncodingName string
 	var handleBom BomHandling
@@ -159,8 +163,6 @@ func realMain() int {
 			useWindowsLineBreak,
 			resultContent)
 
-		slicehelper.ClearInteger(inputContent)
-
 		if err != nil {
 			return printProcessingErrorf(mainMsgBase+8, `Error writing file '%s': %s`, inputFilePath, err.Error())
 		}
@@ -213,4 +215,38 @@ func getPasswords(password string) ([]string, error) {
 	}
 
 	return result, nil
+}
+
+// checkPasswords checks the lengths of the passwords for a common divisor
+// which weakens the encryption.
+func checkPasswords(passwords []string) bool {
+	result := true
+
+	// 1. Get lengths of passwords
+	pwLen := len(passwords)
+	lengths := make([]int, pwLen)
+	for i, pw := range passwords {
+		lengths[i] = len(pw)
+	}
+
+	// 2. Check password lengths for common divisors.
+	for i := 0; i < pwLen-1; i++ {
+		li := lengths[i]
+		for j := i + 1; j < pwLen; j++ {
+			lj := lengths[j]
+			gcd := mathhelper.Gcd(li, lj)
+			if gcd != 1 {
+				logger.PrintErrorf(mainMsgBase+11,
+					`The lengths of the passwords '%s' (%d) and '%s' (%d) share a common divisor: %d`,
+					passwords[i],
+					li,
+					passwords[j],
+					lj,
+					gcd)
+				result = false
+			}
+		}
+	}
+
+	return result
 }
