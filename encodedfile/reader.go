@@ -20,10 +20,11 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.0.0
+// Version: 2.0.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
+//    2025-03-14: V2.0.0: Replaced different Read functions with just one with filter and converter.
 //
 
 package encodedfile
@@ -35,16 +36,20 @@ import (
 	"golang.org/x/text/transform"
 	"io"
 	"os"
+	"transposer/converters"
 	"transposer/encodinghelper"
 	"transposer/filehelper"
+	"transposer/filters"
 	"transposer/numberformat"
-	"unicode"
 )
 
-func ReadAllRunesAsIs(
+// ReadRunes reads runes from the given file and filters and converts the runes.
+func ReadRunes(
 	path string,
 	maxFileSize int64,
-	encodingName string) ([]rune, bool, error) {
+	encodingName string,
+	filter filters.RuneFilter,
+	converter converters.RuneConverter) ([]rune, bool, error) {
 	result, br, f, err := prepareFileForReading(path, maxFileSize, encodingName)
 	if err != nil {
 		return nil, false, err
@@ -78,105 +83,12 @@ func ReadAllRunesAsIs(
 				}
 			}
 
-			result[i] = r
-			i++
 			hadCarriageReturn = false
-		} else {
-			hadCarriageReturn = true
-		}
-	}
-}
 
-func ReadOnlyLetterRunes(
-	path string,
-	maxFileSize int64,
-	encodingName string,
-	changeCase bool,
-	useLower bool) ([]rune, bool, error) {
-	result, br, f, err := prepareFileForReading(path, maxFileSize, encodingName)
-	if err != nil {
-		return nil, false, err
-	}
-	defer filehelper.CloseWithName(f)
-
-	i := 0
-	for {
-		var r rune
-		r, _, err = br.ReadRune()
-
-		if errors.Is(err, io.EOF) {
-			return result[:i], false, nil
-		}
-
-		if err != nil {
-			return nil, false, err
-		}
-
-		if unicode.IsLetter(r) {
-			if changeCase {
-				if useLower {
-					r = unicode.ToLower(r)
-				} else {
-					r = unicode.ToUpper(r)
-				}
+			if filter(r) {
+				result[i] = converter(r)
+				i++
 			}
-
-			result[i] = r
-			i++
-		}
-	}
-}
-
-func ReadAllRunes(
-	path string,
-	maxFileSize int64,
-	encodingName string,
-	changeCase bool,
-	useLower bool) ([]rune, bool, error) {
-	result, br, f, err := prepareFileForReading(path, maxFileSize, encodingName)
-	if err != nil {
-		return nil, false, err
-	}
-	defer filehelper.CloseWithName(f)
-
-	hadCarriageReturn := false
-	hasWindowsLineBreaks := false
-	i := 0
-	for {
-		var r rune
-		r, _, err = br.ReadRune()
-
-		if errors.Is(err, io.EOF) {
-			return result[:i], hasWindowsLineBreaks, nil
-		}
-
-		if err != nil {
-			return nil, false, err
-		}
-
-		// Do not read carriage return if followed by new line.
-		if r != carriageReturn {
-			// But read it, if it is not followed by new line.
-			if hadCarriageReturn {
-				if r != lineFeed {
-					result[i] = carriageReturn
-					i++
-				} else {
-					hasWindowsLineBreaks = true
-				}
-			}
-
-			if changeCase && unicode.IsLetter(r) {
-				if useLower {
-					r = unicode.ToLower(r)
-				} else {
-					r = unicode.ToUpper(r)
-				}
-			}
-
-			result[i] = r
-			i++
-			hadCarriageReturn = false
 		} else {
 			hadCarriageReturn = true
 		}

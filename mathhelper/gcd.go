@@ -34,9 +34,9 @@ import "transposer/constraints"
 // Gcd returns the greatest common divisor of two integer types.
 func Gcd[T constraints.Integer](a, b T) T {
 	for b != 0 {
-		h := a % b
+		r := a % b
 		a = b
-		b = h
+		b = r
 	}
 
 	return a

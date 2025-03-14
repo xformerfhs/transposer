@@ -30,6 +30,7 @@ package encodedfile
 
 import (
 	"bufio"
+	"fmt"
 	"golang.org/x/text/transform"
 	"os"
 	"transposer/encodinghelper"
@@ -58,7 +59,7 @@ func WriteEncoded(
 
 		_, err = bw.WriteRune(r)
 		if err != nil {
-			return err
+			return fmt.Errorf(`character '%c': %w`, r, err)
 		}
 	}
 
