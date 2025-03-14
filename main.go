@@ -49,6 +49,9 @@ import (
 // maxFileSize is the maximum size of a text file.
 const maxFileSize = 10_000_000
 
+// minPasswordLen is the minimum size for one password.
+const minPasswordLen = 6
+
 // fmtEncodedFileOperation contains the format for encoded file operation messages.
 const fmtEncodedFileOperation = `%s file '%s' with %s encoding`
 
@@ -129,12 +132,12 @@ func realMain() int {
 		var inputContent []rune
 		var useWindowsLineBreak bool
 		if doEncrypt {
-			if useAllCharacters {
-				// Read all characters.
-				inputContent, useWindowsLineBreak, err = encodedfile.ReadAllRunes(inputFilePath, maxFileSize, actInputEncodingName, useConversion, toLower)
-			} else {
+			if onlyLetters {
 				// Read only letters.
 				inputContent, useWindowsLineBreak, err = encodedfile.ReadOnlyLetterRunes(inputFilePath, maxFileSize, actInputEncodingName, useConversion, toLower)
+			} else {
+				// Read all characters.
+				inputContent, useWindowsLineBreak, err = encodedfile.ReadAllRunes(inputFilePath, maxFileSize, actInputEncodingName, useConversion, toLower)
 			}
 		} else {
 			// When decrypting no character transformation or filtering is wanted.
@@ -226,8 +229,16 @@ func checkPasswords(passwords []string) bool {
 	pwLen := len(passwords)
 	lengths := make([]int, pwLen)
 	for i, pw := range passwords {
-		lengths[i] = len(pw)
+		pwl := len(pw)
+		if pwl < minPasswordLen {
+			logger.PrintErrorf(mainMsgBase+11, `Password '%s' is too short`, pw)
+			return false
+		}
+
+		lengths[i] = pwl
 	}
+
+	logger.PrintInfof(mainMsgBase+12, `Password lengths: %v`, lengths)
 
 	// 2. Check password lengths for common divisors.
 	for i := 0; i < pwLen-1; i++ {
@@ -236,7 +247,7 @@ func checkPasswords(passwords []string) bool {
 			lj := lengths[j]
 			gcd := mathhelper.Gcd(li, lj)
 			if gcd != 1 {
-				logger.PrintErrorf(mainMsgBase+11,
+				logger.PrintErrorf(mainMsgBase+13,
 					`The lengths of the passwords '%s' (%d) and '%s' (%d) share a common divisor: %d`,
 					passwords[i],
 					li,
