@@ -88,7 +88,7 @@ func defineCommandlineFlags() {
 	// 1. Encryption.
 	encryptFlagSet.StringVar(&fileEncoding, `encoding`, encodingName, `character encoding for input[:output]`)
 	encryptFlagSet.StringVar(&password, `passwords`, ``, `Transposition password(s) (separated by ':', if there is more than one)`)
-	encryptFlagSet.StringVar(&conversion, `convert`, ``, `Characters are converted to 'lower' or 'upper' case`)
+	encryptFlagSet.StringVar(&conversion, `case`, ``, `Characters are converted to 'lower' or 'upper' case`)
 	encryptFlagSet.BoolVar(&onlyLetters, `onlyletters`, false, `If set only letters are read and transposed (default: All letters are read)`)
 
 	encryptFlagSet.Usage = printUsageFunction
@@ -167,7 +167,7 @@ func printUsageFunction() {
 	w := flag.CommandLine.Output()
 
 	_, _ = fmt.Fprintf(w,
-		"\nUsage:\n   %s encrypt -encoding {input[:output]} -passwords {transpositionPasswords} -convert [upper|lower] -onlyletters {inputFilePath...}",
+		"\nUsage:\n   %s encrypt -encoding {input[:output]} -passwords {transpositionPasswords} -case [upper|lower] -onlyletters {inputFilePath...}",
 		myName)
 	_, _ = fmt.Fprintf(w,
 		"\n   %s decrypt -encoding {input[:output]} -passwords {transpositionPasswords} {inputFilePath...}\n",
