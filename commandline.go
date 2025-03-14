@@ -172,6 +172,12 @@ func printUsageFunction() {
 	_, _ = fmt.Fprintf(w,
 		"\n   %s decrypt -encoding {input[:output]} -passwords {transpositionPasswords} {inputFilePath...}\n",
 		myName)
+	_, _ = fmt.Fprintf(w,
+		"\n   %s help\n",
+		myName)
+	_, _ = fmt.Fprintf(w,
+		"\n   %s version\n",
+		myName)
 
 	_, _ = fmt.Fprintln(w, "\nEncrypt:")
 
@@ -180,6 +186,12 @@ func printUsageFunction() {
 	_, _ = fmt.Fprintln(w, "\nDecrypt:")
 
 	decryptFlagSet.PrintDefaults()
+
+	_, _ = fmt.Fprintln(w, "\nHelp:")
+	_, _ = fmt.Fprintln(w, "  Show this help")
+
+	_, _ = fmt.Fprintln(w, "\nVersion:")
+	_, _ = fmt.Fprintln(w, "  Show version information")
 
 	_, _ = fmt.Fprintln(w)
 	_, _ = fmt.Fprintf(w, "Maximum file size is %s bytes.\n", numberformat.FormatInt(maxFileSize))
@@ -190,7 +202,7 @@ func printUsageFunction() {
 	_, _ = fmt.Fprintln(w, "\nEncoding may be any of the following:")
 
 	for _, encodingName := range encodinghelper.EncodingNames() {
-		_, _ = fmt.Fprint(w, `   `)
+		_, _ = fmt.Fprint(w, `  `)
 		_, _ = fmt.Fprintln(w, encodingName)
 	}
 
