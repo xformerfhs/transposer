@@ -40,22 +40,52 @@ import (
 	"transposer/numberformat"
 )
 
+// ******** Private variables ********
+
+// -------- Command line variables --------
+
+// fileEncoding contains the file encoding string from the command line.
 var fileEncoding string
+
+// password contains the password string from the command line.
 var password string
+
+// conversion contains the convert string from the command line.
 var conversion string
+
+// onlyLetters contains the onlyletters value from the command line.
 var onlyLetters bool
 
+// -------- Variables derived from the command line --------
+
+// useConversion indicates that characters should be converted.
 var useConversion bool
+
+// toLower indicates that characters are converted to lower case.
+// If useConversion is true and toLower is false characters are converted to upper case.
 var toLower bool
+
+// passwords contains the list of passwords from the command line.
 var passwords []string
+
+// inputFiles contains the list of file paths from the command line.
 var inputFiles []string
 
+// -------- Flag sets --------
+
+// encryptFlagSet is the flag set used for encryption.
 var encryptFlagSet = flag.NewFlagSet(`encrypt`, flag.ExitOnError)
+
+// decryptFlagSet is the flag set used for decryption.
 var decryptFlagSet = flag.NewFlagSet(`decrypt`, flag.ExitOnError)
 
+// ******** Private functions ********
+
+// defineCommandlineFlags defines the flag sets for command line processing.
 func defineCommandlineFlags() {
 	encodingName := encodinghelper.PlatformDefaultEncodingName()
 
+	// 1. Encryption.
 	encryptFlagSet.StringVar(&fileEncoding, `encoding`, encodingName, `character encoding for input[:output]`)
 	encryptFlagSet.StringVar(&password, `passwords`, ``, `Transposition password(s) (separated by ':', if there is more than one)`)
 	encryptFlagSet.StringVar(&conversion, `convert`, ``, `Characters are converted to 'lower' or 'upper' case`)
@@ -63,12 +93,14 @@ func defineCommandlineFlags() {
 
 	encryptFlagSet.Usage = printUsageFunction
 
+	// 2. Decryption.
 	decryptFlagSet.StringVar(&fileEncoding, `encoding`, encodingName, `character encoding for input[:output]`)
 	decryptFlagSet.StringVar(&password, `passwords`, ``, `Transposition password(s) (separated by ':', if there is more than one)`)
 
 	decryptFlagSet.Usage = printUsageFunction
 }
 
+// processCommandlineFlags processes the command line with the correct flag set.
 func processCommandlineFlags(doEncrypt bool) error {
 	var fs *flag.FlagSet
 	if doEncrypt {
@@ -87,22 +119,27 @@ func processCommandlineFlags(doEncrypt bool) error {
 	return nil
 }
 
+// checkCommandlineFlags does some basic checks of the command line.
 func checkCommandlineFlags(doEncrypt bool) error {
+	// 1. Check that passwords is set.
 	if len(password) == 0 {
 		return errors.New(`transposition passwords must not be empty`)
 	}
 
+	// 2. Convert the passwords string to a list of passwords.
 	var err error
 	passwords, err = getPasswords(password)
 	if err != nil {
 		return err
 	}
 
+	// 3. Check that there are input files.
 	if len(inputFiles) == 0 {
 		return errors.New(`input file(s) must not be be empty`)
 	}
 
 	if doEncrypt {
+		// 4. Check conversion string for encryption.
 		if len(conversion) != 0 {
 			conversion = strings.ToLower(strings.TrimSpace(conversion))
 			if len(conversion) != 0 {
@@ -125,6 +162,7 @@ func checkCommandlineFlags(doEncrypt bool) error {
 	return nil
 }
 
+// printUsageFunction is the usage function of the flag sets.
 func printUsageFunction() {
 	w := flag.CommandLine.Output()
 
