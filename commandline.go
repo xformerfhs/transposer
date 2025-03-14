@@ -86,8 +86,8 @@ func defineCommandlineFlags() {
 	encodingName := encodinghelper.PlatformDefaultEncodingName()
 
 	// 1. Encryption.
-	encryptFlagSet.StringVar(&fileEncoding, `encoding`, encodingName, `character encoding for input[:output]`)
-	encryptFlagSet.StringVar(&password, `passwords`, ``, `Transposition password(s) (separated by ':', if there is more than one)`)
+	encryptFlagSet.StringVar(&fileEncoding, `encoding`, encodingName, `character encoding for input[:output] (separated by ':' or ','`)
+	encryptFlagSet.StringVar(&password, `passwords`, ``, `Transposition password(s) (separated by ':' or ',', if there is more than one)`)
 	encryptFlagSet.StringVar(&conversion, `case`, ``, `Characters are converted to 'lower' or 'upper' case`)
 	encryptFlagSet.BoolVar(&onlyLetters, `onlyletters`, false, `If set only letters are read and transposed (default: All letters are read)`)
 
