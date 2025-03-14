@@ -20,11 +20,12 @@
 //
 // Author: Frank Schwab
 //
-// Version: 2.0.0
+// Version: 3.0.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
 //    2025-03-14: V2.0.0: Replaced different Read functions with just one with filter and converter.
+//    2025-03-14: V3.0.0: Removed filter and converter and use flags, as it is faster.
 //
 
 package encodedfile
@@ -36,11 +37,10 @@ import (
 	"golang.org/x/text/transform"
 	"io"
 	"os"
-	"transposer/converters"
 	"transposer/encodinghelper"
 	"transposer/filehelper"
-	"transposer/filters"
 	"transposer/numberformat"
+	"unicode"
 )
 
 // ReadRunes reads runes from the given file and filters and converts the runes.
@@ -48,8 +48,9 @@ func ReadRunes(
 	path string,
 	maxFileSize int64,
 	encodingName string,
-	filter filters.RuneFilter,
-	converter converters.RuneConverter) ([]rune, bool, error) {
+	doConversion bool,
+	toLower bool,
+	onlyLetters bool) ([]rune, bool, error) {
 	result, br, f, err := prepareFileForReading(path, maxFileSize, encodingName)
 	if err != nil {
 		return nil, false, err
@@ -85,10 +86,20 @@ func ReadRunes(
 
 			hadCarriageReturn = false
 
-			if filter(r) {
-				result[i] = converter(r)
-				i++
+			if onlyLetters && !unicode.IsLetter(r) {
+				continue
 			}
+
+			if doConversion {
+				if toLower {
+					r = unicode.ToLower(r)
+				} else {
+					r = unicode.ToUpper(r)
+				}
+			}
+
+			result[i] = r
+			i++
 		} else {
 			hadCarriageReturn = true
 		}

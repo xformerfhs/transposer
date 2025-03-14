@@ -35,11 +35,9 @@ import (
 	"os"
 	"runtime"
 	"strings"
-	"transposer/converters"
 	"transposer/encodedfile"
 	"transposer/encodinghelper"
 	"transposer/filehelper"
-	"transposer/filters"
 	"transposer/logger"
 	"transposer/mathhelper"
 	"transposer/stringhelper"
@@ -112,8 +110,6 @@ func realMain() int {
 		return printUsageError(mainMsgBase+3, err.Error())
 	}
 
-	converter, filter := chooseConverterAndFilter(doEncrypt)
-
 	// 3. Loop through input files.
 	for _, inputFilePath := range inputFiles {
 		// 3.1 Probe file, whether it has a BOM.
@@ -139,8 +135,9 @@ func realMain() int {
 			inputFilePath,
 			maxFileSize,
 			actInputEncodingName,
-			filter,
-			converter)
+			useConversion,
+			toLower,
+			onlyLetters)
 		if err != nil {
 			return printProcessingErrorf(mainMsgBase+6, `Error reading file '%s': %s`, inputFilePath, err.Error())
 		}
@@ -172,35 +169,6 @@ func realMain() int {
 }
 
 // ******** Private functions ********
-
-// chooseConverterAndFilter chooses a converter and a filter.
-func chooseConverterAndFilter(doEncrypt bool) (converters.RuneConverter, filters.RuneFilter) {
-	if doEncrypt {
-		return encryptConversion(), encryptFilter()
-	} else {
-		return converters.Same, filters.Pass
-	}
-}
-
-func encryptFilter() filters.RuneFilter {
-	if onlyLetters {
-		return filters.OnlyLetters
-	} else {
-		return filters.Pass
-	}
-}
-
-func encryptConversion() converters.RuneConverter {
-	if useConversion {
-		if toLower {
-			return converters.ToLower
-		} else {
-			return converters.ToUpper
-		}
-	} else {
-		return converters.Same
-	}
-}
 
 // checkCommand checks the given command and executes it, if it is 'help' or 'version'.
 // Otherwise, it only signals if the command was 'encrypt', or not.
