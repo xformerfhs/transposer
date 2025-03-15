@@ -20,15 +20,17 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.0.0
+// Version: 2.0.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
+//    2025-03-15: V2.0.0: Parallelize encryption.
 //
 
 package transposition
 
 import (
+	"sync"
 	"transposer/slicehelper"
 )
 
@@ -36,8 +38,8 @@ import (
 
 // TransposeRuneArray transposes a rune array with the given passwords.
 func TransposeRuneArray(source []rune, passwords []string) []rune {
-	sourceLength := len(source)
-	result := make([]rune, sourceLength)
+	sourceLen := len(source)
+	result := make([]rune, sourceLen)
 
 	from := result
 	to := source
@@ -45,18 +47,41 @@ func TransposeRuneArray(source []rune, passwords []string) []rune {
 		from, to = to, from
 
 		offsets := columnOrder(password)
-		transposeLength := len(offsets)
+		transposeLen := len(offsets)
 
+		var wg sync.WaitGroup
 		destinationIndex := 0
 		for _, offset := range offsets {
-			for sourceIndex := offset; sourceIndex < sourceLength; sourceIndex += transposeLength {
-				to[destinationIndex] = from[sourceIndex]
-				destinationIndex++
-			}
+			// Transpose each column in parallel.
+			wg.Add(1)
+			go transposeColumn(&wg, from, to, sourceLen, transposeLen, offset, destinationIndex)
+
+			destinationIndex += columnLen(sourceLen, transposeLen, offset)
 		}
+
+		wg.Wait()
 
 		slicehelper.ClearInteger(offsets)
 	}
 
 	return to
+}
+
+// ******** Private functions ********
+
+// transposeColumn transposes a column.
+func transposeColumn(
+	wg *sync.WaitGroup,
+	from []rune,
+	to []rune,
+	sourceLen int,
+	transposeLen int,
+	offset int,
+	destinationIndex int) {
+	defer wg.Done()
+
+	for sourceIndex := offset; sourceIndex < sourceLen; sourceIndex += transposeLen {
+		to[destinationIndex] = from[sourceIndex]
+		destinationIndex++
+	}
 }

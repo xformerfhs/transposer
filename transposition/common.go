@@ -20,10 +20,11 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.0.0
+// Version: 2.0.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
+//    2025-03-15: V2.0.0: Added StripeLen.
 //
 
 // Package transposition contains the functions that transpose and untranspose
@@ -31,6 +32,8 @@
 package transposition
 
 import "transposer/linkedlist"
+
+// ******** Private functions ********
 
 // columnOrder returns a slice with the order of the offsets of the columns.
 func columnOrder(source string) []int {
@@ -46,4 +49,16 @@ func columnOrder(source string) []int {
 	}
 
 	return orderList.ValueOrderedIndices()
+}
+
+// columnLen calculates the length of the column starting at the given offset.
+func columnLen(sourceLen int, transposeLen int, offset int) int {
+	sourceLen = sourceLen - offset
+	result := sourceLen / transposeLen
+	remainder := sourceLen - (result * transposeLen)
+	if remainder > 0 {
+		result++
+	}
+
+	return result
 }
