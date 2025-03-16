@@ -86,8 +86,8 @@ func init() {
 // fillEncodingMap fills the encoding map.
 func fillEncodingMap() {
 	textToEncoding[`utf8`] = encodingInfo{name: `UTF-8`, encoding: nil}
-	textToEncoding[`utf16be`] = encodingInfo{name: `UTF-16BE-BOM`, encoding: nil}
-	textToEncoding[`utf16le`] = encodingInfo{name: `UTF-16LE-BOM`, encoding: nil}
+	textToEncoding[`utf16be`] = encodingInfo{name: `UTF-16BE`, encoding: nil}
+	textToEncoding[`utf16le`] = encodingInfo{name: `UTF-16LE`, encoding: nil}
 
 	for _, enc := range charmap.All {
 		cm, isCm := enc.(*charmap.Charmap)
