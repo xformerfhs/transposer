@@ -37,6 +37,7 @@ import (
 // ******** Public functions ********
 
 // TransposeRuneArray transposes a rune array with the given passwords.
+// Attention: source is overwritten, if there is more than one password!
 func TransposeRuneArray(source []rune, passwords []string) []rune {
 	sourceLen := len(source)
 	result := make([]rune, sourceLen)

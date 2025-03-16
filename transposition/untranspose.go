@@ -36,6 +36,7 @@ import (
 )
 
 // UnTransposeRuneArray reverts a transposition with the given passwords.
+// Attention: source is overwritten, if there is more than one password!
 func UnTransposeRuneArray(source []rune, passwords []string) []rune {
 	sourceLen := len(source)
 	result := make([]rune, sourceLen)
