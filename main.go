@@ -32,6 +32,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"runtime"
 	"strings"
@@ -187,7 +188,7 @@ func checkCommand() (bool, int, bool) {
 
 	// Print version
 	if cmd == 'v' {
-		logger.PrintInfof(mainMsgBase+10, `%s V%s (%s)`, myName, myVersion, runtime.Version())
+		fmt.Printf(`%s V%s (%s, %d cpus)`, myName, myVersion, runtime.Version(), runtime.NumCPU())
 		return false, rcOK, true
 	}
 
@@ -225,14 +226,14 @@ func checkPasswords(passwords []string) bool {
 	for i, pw := range passwords {
 		pwl := len(pw)
 		if pwl < minPasswordLen {
-			logger.PrintErrorf(mainMsgBase+11, `Password '%s' is too short`, pw)
+			logger.PrintErrorf(mainMsgBase+10, `Password '%s' is too short`, pw)
 			return false
 		}
 
 		lengths[i] = pwl
 	}
 
-	logger.PrintInfof(mainMsgBase+12, `Password lengths: %v`, lengths)
+	logger.PrintInfof(mainMsgBase+11, `Password lengths: %v`, lengths)
 
 	// 2. Check password lengths for common divisors.
 	for i := 0; i < pwLen-1; i++ {
@@ -241,7 +242,7 @@ func checkPasswords(passwords []string) bool {
 			lj := lengths[j]
 			gcd := mathhelper.Gcd(li, lj)
 			if gcd != 1 {
-				logger.PrintErrorf(mainMsgBase+13,
+				logger.PrintErrorf(mainMsgBase+12,
 					`The lengths of the passwords '%s' (%d) and '%s' (%d) share a common divisor: %d`,
 					passwords[i],
 					li,
