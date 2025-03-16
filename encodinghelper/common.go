@@ -72,7 +72,7 @@ var utf8BomEncoding = unicode.UTF8BOM
 var utf8NoBomEncoding = unicode.UTF8
 
 // textToEncoding maps an encoding specification to the corresponding encoding information.
-var textToEncoding = map[string]encodingInfo{}
+var textToEncoding = make(map[string]encodingInfo, 50)
 
 // ******** Init function *********
 
