@@ -24,7 +24,7 @@
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
-//    2025-03-15: V2.0.0: Added StripeLen.
+//    2025-03-15: V2.0.0: Added columnLen.
 //
 
 // Package transposition contains the functions that transpose and untranspose
