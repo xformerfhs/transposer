@@ -199,7 +199,7 @@ func checkCommand() (bool, int, bool) {
 }
 
 // getPasswords analyzes the password string and returns all given passwords as a slice.
-// The passwords are converted to all lower-case. This is done to prevent weaking of the
+// The passwords are converted to all lower-case. This is done to prevent weakening of the
 // passwords by starting them with an upper-case letter and then continuing with lower
 // case letters, which would effectively remove one letter from the password strength.
 func getPasswords(password string) ([]string, error) {
