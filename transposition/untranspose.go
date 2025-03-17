@@ -20,11 +20,12 @@
 //
 // Author: Frank Schwab
 //
-// Version: 2.0.0
+// Version: 2.1.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
 //    2025-03-15: V2.0.0: Parallelize decryption.
+//    2025-03-17: V2.1.0: Use clear.
 //
 
 package transposition
@@ -32,7 +33,6 @@ package transposition
 import (
 	"slices"
 	"sync"
-	"transposer/slicehelper"
 )
 
 // UnTransposeRuneArray reverts a transposition with the given passwords.
@@ -63,7 +63,7 @@ func UnTransposeRuneArray(source []rune, passwords []string) []rune {
 
 		wg.Wait()
 
-		slicehelper.ClearInteger(offsets)
+		clear(offsets)
 	}
 
 	return to
