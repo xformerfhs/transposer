@@ -125,7 +125,7 @@ func realMain() int {
 		var hasBom bool
 		fileBomEncodingName, hasBom, err = encodinghelper.ProbeFile(inputFilePath)
 		if err != nil {
-			return printProcessingErrorf(mainMsgBase+4, `Error reading file '%s': %s`, inputFilePath, err.Error())
+			return printProcessingError(mainMsgBase+4, err.Error())
 		}
 
 		// If it has a BOM and the input encoding is different from it, change the input encoding.
@@ -146,7 +146,7 @@ func realMain() int {
 			toLower,
 			onlyLetters)
 		if err != nil {
-			return printProcessingErrorf(mainMsgBase+6, `Error reading file '%s': %s`, inputFilePath, err.Error())
+			return printProcessingError(mainMsgBase+6, err.Error())
 		}
 
 		// 3.3 Transpose the input runes.
@@ -168,7 +168,7 @@ func realMain() int {
 			resultContent)
 
 		if err != nil {
-			return printProcessingErrorf(mainMsgBase+8, `Error writing file '%s': %s`, inputFilePath, err.Error())
+			return printProcessingError(mainMsgBase+8, err.Error())
 		}
 	}
 
