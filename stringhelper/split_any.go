@@ -9,13 +9,13 @@ import (
 
 // SplitAny splits a string at any character in the separators string.
 func SplitAny(source string, separators string) []string {
-	return genSplitAny(source, separators, 0, -1)
+	return genSplitAny(source, separators, -1)
 }
 
 // SplitAnyN splits a string at any character in the separators string.
 // It returns at most n substrings; the last substring will be the unsplit remainder.
 func SplitAnyN(source string, separators string, n int) []string {
-	return genSplitAny(source, separators, 0, n)
+	return genSplitAny(source, separators, n)
 }
 
 // CountAny counts all occurrences of any character in the separators string.
@@ -29,9 +29,8 @@ func CountAny(source string, separators string) int {
 
 // ******** Private functions ********
 
-// Generic split: splits after each instance of sep,
-// including sepSave bytes of sep in the subarrays.
-func genSplitAny(source string, separators string, sepSave int, n int) []string {
+// Generic split: splits after each instance of sep.
+func genSplitAny(source string, separators string, n int) []string {
 	if n == 0 {
 		return nil
 	}
@@ -57,9 +56,10 @@ func genSplitAny(source string, separators string, sepSave int, n int) []string 
 			break
 		}
 
-		result[i] = source[:pos+sepSave]
-
+		// size should have been returned by IndexAny.
 		_, size := utf8.DecodeRuneInString(source[pos:])
+
+		result[i] = source[:pos]
 		source = source[pos+size:]
 
 		i++
@@ -81,7 +81,10 @@ func countAny(source string, separators string) int {
 		}
 
 		n++
-		source = source[pos+1:]
+
+		// size should have been returned by IndexAny.
+		_, size := utf8.DecodeRuneInString(source[pos:])
+		source = source[pos+size:]
 	}
 
 	return n
