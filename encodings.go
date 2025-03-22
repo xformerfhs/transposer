@@ -67,7 +67,7 @@ const (
 // for input and output encoding, the BOM handling to be used and the BOM bytes
 // if a BOM should be set on output.
 func GetEncodings(fileEncoding string) (string, string, BomHandling, error) {
-	elements := stringhelper.SplitAnyN(fileEncoding, `:,`, 2)
+	elements := stringhelper.SplitAnyN(fileEncoding, `:,`, 3)
 	elementsLength := len(elements)
 
 	if elementsLength < 1 {
