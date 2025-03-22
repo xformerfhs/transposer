@@ -20,9 +20,6 @@ func SplitAnyN(source string, separators string, n int) []string {
 
 // CountAny counts all occurrences of any character in the separators string.
 func CountAny(source string, separators string) int {
-	if len(source) == 0 {
-		return -1
-	}
 	if len(separators) == 0 {
 		return utf8.RuneCountInString(source) + 1
 	}
