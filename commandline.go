@@ -47,8 +47,8 @@ import (
 // fileEncoding contains the file encoding string from the command line.
 var fileEncoding string
 
-// password contains the password string from the command line.
-var password string
+// passwordSpec contains the passwords string from the command line.
+var passwordSpec string
 
 // conversion contains the convert string from the command line.
 var conversion string
@@ -87,7 +87,7 @@ func defineCommandlineFlags() {
 
 	// 1. Encryption.
 	encryptFlagSet.StringVar(&fileEncoding, `encoding`, encodingName, `character encoding for input[:output] (separated by ':' or ','`)
-	encryptFlagSet.StringVar(&password, `passwords`, ``, `Transposition password(s) (separated by ':' or ',', if there is more than one)`)
+	encryptFlagSet.StringVar(&passwordSpec, `passwords`, ``, `Transposition passwordSpec(s) (separated by ':' or ',', if there is more than one)`)
 	encryptFlagSet.StringVar(&conversion, `case`, ``, `Characters are converted to 'lower' or 'upper' case`)
 	encryptFlagSet.BoolVar(&onlyLetters, `onlyletters`, false, `If set only letters are read and transposed (default: All letters are read)`)
 
@@ -95,7 +95,7 @@ func defineCommandlineFlags() {
 
 	// 2. Decryption.
 	decryptFlagSet.StringVar(&fileEncoding, `encoding`, encodingName, `character encoding for input[:output]`)
-	decryptFlagSet.StringVar(&password, `passwords`, ``, `Transposition password(s) (separated by ':', if there is more than one)`)
+	decryptFlagSet.StringVar(&passwordSpec, `passwords`, ``, `Transposition passwordSpec(s) (separated by ':', if there is more than one)`)
 
 	decryptFlagSet.Usage = printUsageFunction
 }
@@ -121,21 +121,24 @@ func processCommandlineFlags(doEncrypt bool) error {
 
 // checkCommandlineFlags does some basic checks of the command line.
 func checkCommandlineFlags(doEncrypt bool) error {
-	// 1. Check that passwords is set.
-	if len(password) == 0 {
+	// 1. Check that passwords is set and not too long.
+	if len(passwordSpec) == 0 {
 		return errors.New(`transposition passwords must not be empty`)
+	}
+	if len(passwordSpec) > maxPasswordsLen {
+		return errors.New(`transposition passwords too long`)
 	}
 
 	// 2. Convert the passwords string to a list of passwords.
 	var err error
-	passwords, err = getPasswords(password)
+	passwords, err = getPasswords(passwordSpec)
 	if err != nil {
 		return err
 	}
 
 	// 3. Check that there are input files.
 	if len(inputFiles) == 0 {
-		return errors.New(`input file(s) must not be be empty`)
+		return errors.New(`no input file(s) given`)
 	}
 
 	if doEncrypt {
@@ -197,6 +200,9 @@ func printUsageFunction() {
 	_, _ = fmt.Fprintf(w, "Maximum file size is %s bytes.\n", numberformat.FormatInt(maxFileSize))
 	_, _ = fmt.Fprintln(w, `Output is written to the {inputFilepath} with '_trans' or '_untrans' added to the file name.`)
 	_, _ = fmt.Fprintln(w, `The passwords are separated by ':' or ','.`)
+	_, _ = fmt.Fprintf(w, "There can be up to %s passwords with a maximum total length of %s characters, including separators\n",
+		numberformat.FormatInt(maxNumPasswords),
+		numberformat.FormatInt(maxPasswordsLen))
 	_, _ = fmt.Fprintln(w, `The encoding can be specified for the input and output file separately, separated by ':' or ','.`)
 	_, _ = fmt.Fprintln(w, `If the output encoding is not specified it is the same as the input encoding.`)
 	_, _ = fmt.Fprintln(w, "\nEncoding may be any of the following:")

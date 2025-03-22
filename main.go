@@ -50,8 +50,14 @@ import (
 // maxFileSize is the maximum size of a text file.
 const maxFileSize = 10_000_000
 
-// minPasswordLen is the minimum size for one password.
+// minPasswordLen is the minimum length of one password.
 const minPasswordLen = 6
+
+// maxPasswordsLen is the maximum length of the string of all passwords.
+const maxPasswordsLen = 40_000
+
+// maxNumPasswords is the maximum possible number of passwords.
+const maxNumPasswords = 100
 
 // fmtEncodedFileOperation contains the format for encoded file operation messages.
 const fmtEncodedFileOperation = `%s file '%s' with %s encoding`
@@ -198,12 +204,16 @@ func checkCommand() (bool, int, bool) {
 	return doEncrypt, rcOK, false
 }
 
-// getPasswords analyzes the password string and returns all given passwords as a slice.
+// getPasswords analyzes the passwordSpec string and returns all given passwords as a slice.
 // The passwords are converted to all lower-case. This is done to prevent weakening of the
 // passwords by starting them with an upper-case letter and then continuing with lower
 // case letters, which would effectively remove one letter from the password strength.
 func getPasswords(password string) ([]string, error) {
-	elements := stringhelper.SplitAny(password, `:,`)
+	elements := stringhelper.SplitAnyN(password, `:,`, maxNumPasswords+1)
+	if len(elements) > maxNumPasswords {
+		return nil, errors.New(`too many passwords`)
+	}
+
 	result := make([]string, len(elements))
 	for i, candidate := range elements {
 		if !stringhelper.IsAlphaNumeric(candidate) {

@@ -56,18 +56,18 @@ var buffer [maxFormattedNumberLength]byte
 // -------- Int functions --------
 
 // FormatInt64WithSeparator formats an int64 with the specified separator.
-func FormatInt64WithSeparator(aNumber int64, separator byte) string {
+func FormatInt64WithSeparator(n int64, separator byte) string {
 	var positiveNumber uint64
-	isNegative := aNumber < 0
+	isNegative := n < 0
 	if isNegative {
 		// The minimum int64 value can not be made positive, so this is handled on its own.
-		if aNumber != math.MinInt64 {
-			positiveNumber = uint64(-aNumber)
+		if n != math.MinInt64 {
+			positiveNumber = uint64(-n)
 		} else {
 			return minInt64Text(separator)
 		}
 	} else {
-		positiveNumber = uint64(aNumber)
+		positiveNumber = uint64(n)
 	}
 
 	idx := formatUint64WithSeparatorInBuffer(positiveNumber, separator)
@@ -80,72 +80,72 @@ func FormatInt64WithSeparator(aNumber int64, separator byte) string {
 }
 
 // FormatInt32WithSeparator formats an int32 with the specified separator.
-func FormatInt32WithSeparator(aNumber int32, separator byte) string {
-	return FormatInt64WithSeparator(int64(aNumber), separator)
+func FormatInt32WithSeparator(n int32, separator byte) string {
+	return FormatInt64WithSeparator(int64(n), separator)
 }
 
 // FormatIntWithSeparator formats an int with the specified separator.
-func FormatIntWithSeparator(aNumber int, separator byte) string {
-	return FormatInt64WithSeparator(int64(aNumber), separator)
+func FormatIntWithSeparator(n int, separator byte) string {
+	return FormatInt64WithSeparator(int64(n), separator)
 }
 
 // FormatInt64 formats an int64 with the default separator.
-func FormatInt64(aNumber int64) string {
-	return FormatInt64WithSeparator(aNumber, defaultSeparator)
+func FormatInt64(n int64) string {
+	return FormatInt64WithSeparator(n, defaultSeparator)
 }
 
 // FormatInt32 formats an int32 with the default separator.
-func FormatInt32(aNumber int32) string {
-	return FormatInt32WithSeparator(aNumber, defaultSeparator)
+func FormatInt32(n int32) string {
+	return FormatInt32WithSeparator(n, defaultSeparator)
 }
 
 // FormatInt formats an int with the default separator.
-func FormatInt(aNumber int) string {
-	return FormatIntWithSeparator(aNumber, defaultSeparator)
+func FormatInt(n int) string {
+	return FormatIntWithSeparator(n, defaultSeparator)
 }
 
 // -------- Uint functions --------
 
 // FormatUint64WithSeparator formats an uint64 with the specified separator.
-func FormatUint64WithSeparator(aNumber uint64, separator byte) string {
-	idx := formatUint64WithSeparatorInBuffer(aNumber, separator)
+func FormatUint64WithSeparator(n uint64, separator byte) string {
+	idx := formatUint64WithSeparatorInBuffer(n, separator)
 
 	return string(buffer[idx:])
 }
 
 // FormatUint32WithSeparator formats an uint32 with the specified separator.
-func FormatUint32WithSeparator(aNumber uint32, separator byte) string {
-	return FormatUint64WithSeparator(uint64(aNumber), separator)
+func FormatUint32WithSeparator(n uint32, separator byte) string {
+	return FormatUint64WithSeparator(uint64(n), separator)
 }
 
 // FormatUintWithSeparator formats an uint with the specified separator.
-func FormatUintWithSeparator(aNumber uint, separator byte) string {
-	return FormatUint64WithSeparator(uint64(aNumber), separator)
+func FormatUintWithSeparator(n uint, separator byte) string {
+	return FormatUint64WithSeparator(uint64(n), separator)
 }
 
 // FormatUint64 formats an uint64 with the default separator.
-func FormatUint64(aNumber uint64) string {
-	return FormatUint64WithSeparator(aNumber, defaultSeparator)
+func FormatUint64(n uint64) string {
+	return FormatUint64WithSeparator(n, defaultSeparator)
 }
 
 // FormatUint32 formats an uint32 with the default separator.
-func FormatUint32(aNumber uint32) string {
-	return FormatUint32WithSeparator(aNumber, defaultSeparator)
+func FormatUint32(n uint32) string {
+	return FormatUint32WithSeparator(n, defaultSeparator)
 }
 
 // FormatUint formats an uint with the default separator.
-func FormatUint(aNumber uint) string {
-	return FormatUintWithSeparator(aNumber, defaultSeparator)
+func FormatUint(n uint) string {
+	return FormatUintWithSeparator(n, defaultSeparator)
 }
 
 // ******** Private functions ********
 
 // formatUint64WithSeparatorInBuffer formats an uint64 with the specified separator into the buffer.
-func formatUint64WithSeparatorInBuffer(aNumber uint64, separator byte) int {
+func formatUint64WithSeparatorInBuffer(n uint64, separator byte) int {
 	idx := byte(len(buffer))
 	charCount := byte(0)
 
-	last := aNumber
+	last := n
 
 	for {
 		if charCount >= 3 {
