@@ -58,7 +58,9 @@ func genSplitAny(source string, separators string, sepSave int, n int) []string 
 		}
 
 		result[i] = source[:pos+sepSave]
-		source = source[pos+1:]
+
+		_, size := utf8.DecodeRuneInString(source[pos:])
+		source = source[pos+size:]
 
 		i++
 	}
