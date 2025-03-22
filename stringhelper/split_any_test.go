@@ -16,14 +16,14 @@ type SplitAnyTest struct {
 var splitAnyTests = []SplitAnyTest{
 	{``, ``, -1, []string{}},
 	{``, `:,-.`, -1, []string{``}},
-	{`No separator at all`, `:,-.`, -1, []string{`No separator at all`}},
-	{`No-separator,at all`, `:,-.`, -1, []string{`No`, `separator`, `at all`}},
-	{`:No-separator,at all`, `:,-.`, -1, []string{``, `No`, `separator`, `at all`}},
-	{`.No-separator,at all:`, `:,-.`, -1, []string{``, `No`, `separator`, `at all`, ``}},
-	{`.Short#`, ``, -1, []string{`.`, `S`, `h`, `o`, `r`, `t`, `#`}},
-	{`Whatever`, `$%?`, 0, nil},
-	{`No-separator,at all`, `:,-.`, 2, []string{`No`, `separator,at all`}},
-	{`%No$separator?at all`, `$%?`, 1_234_567, []string{``, `No`, `separator`, `at all`}},
+	{`Nö sepäratör ät öll`, `:,-.`, -1, []string{`Nö sepäratör ät öll`}},
+	{`Nö-sépäràtor,ät öll`, `:,-.`, -1, []string{`Nö`, `sépäràtor`, `ät öll`}},
+	{`:Nö-sèpárätör,ät öll`, `:,-.`, -1, []string{``, `Nö`, `sèpárätör`, `ät öll`}},
+	{`.Nô-sépàrätór,ät öll:`, `:,-.`, -1, []string{``, `Nô`, `sépàrätór`, `ät öll`, ``}},
+	{`.Shört#`, ``, -1, []string{`.`, `S`, `h`, `ö`, `r`, `t`, `#`}},
+	{`Whàtéver`, `$%?`, 0, nil},
+	{`Nô-sépàrätör,ât äll`, `:,-.`, 2, []string{`Nô`, `sépàrätör,ât äll`}},
+	{`%Nó$sèpärátòr?ät âll`, `$%?`, 1_234_567, []string{``, `Nó`, `sèpärátòr`, `ät âll`}},
 }
 
 func TestSplitAny(t *testing.T) {
