@@ -59,14 +59,14 @@ func UntransposeToTarget[S ~[]T, T any](target S, source S, password string) {
 	clear(offsets)
 }
 
-// Untranspose transposes a rune array with the given password.
+// Untranspose untransposes a slice with the given password.
 func Untranspose[S ~[]T, T any](source S, password string) S {
 	result := make(S, len(source))
 	UntransposeToTarget(result, source, password)
 	return result
 }
 
-// UntransposeMultiplePasswords transposes a rune array with multiple passwords.
+// UntransposeMultiplePasswords transposes a slice with multiple passwords.
 // Side effects: Source is overwritten, if there is more than one password.
 // The list of passwords is reversed.
 func UntransposeMultiplePasswords[S ~[]T, T any](source S, passwords []string) S {

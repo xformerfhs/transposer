@@ -67,7 +67,7 @@ func Transpose[S ~[]T, T any](source S, password string) S {
 	return result
 }
 
-// TransposeMultiplePasswords transposes a rune array with multiple passwords.
+// TransposeMultiplePasswords transposes a slice with multiple passwords.
 // Side effect: Source is overwritten, if there is more than one password.
 func TransposeMultiplePasswords[S ~[]T, T any](source S, passwords []string) S {
 	result := make(S, len(source))
