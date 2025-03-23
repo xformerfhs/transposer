@@ -228,24 +228,41 @@ func getPasswords(password string) ([]string, error) {
 // checkPasswords checks the lengths of the passwords for a common divisor
 // which weakens the encryption.
 func checkPasswords(passwords []string) bool {
-	result := true
-
 	// 1. Get lengths of passwords
-	pwLen := len(passwords)
-	lengths := make([]int, pwLen)
+	lengths, ok := passwordLengths(passwords)
+	if !ok {
+		return ok
+	}
+
+	logger.PrintInfof(mainMsgBase+10, `Password lengths: %v`, lengths)
+
+	// 2. Check password lengths for common divisors.
+	return checkPasswordLengths(passwords, lengths)
+}
+
+// passwordLengths creates a slice of the password lengths and checks them for valid lengths.
+func passwordLengths(passwords []string) ([]int, bool) {
+	ok := true
+	lengths := make([]int, len(passwords))
+
 	for i, pw := range passwords {
 		pwl := len(pw)
 		if pwl < minPasswordLen {
-			logger.PrintErrorf(mainMsgBase+10, `Password '%s' is too short`, pw)
-			return false
+			logger.PrintErrorf(mainMsgBase+11, `Password '%s' is too short`, pw)
+			ok = false
 		}
 
 		lengths[i] = pwl
 	}
 
-	logger.PrintInfof(mainMsgBase+11, `Password lengths: %v`, lengths)
+	return lengths, ok
+}
 
-	// 2. Check password lengths for common divisors.
+// checkPasswordLengths checks the lengths
+func checkPasswordLengths(passwords []string, lengths []int) bool {
+	ok := true
+	pwLen := len(passwords)
+
 	for i := 0; i < pwLen-1; i++ {
 		li := lengths[i]
 		for j := i + 1; j < pwLen; j++ {
@@ -259,10 +276,10 @@ func checkPasswords(passwords []string) bool {
 					passwords[j],
 					lj,
 					gcd)
-				result = false
+				ok = false
 			}
 		}
 	}
 
-	return result
+	return ok
 }
