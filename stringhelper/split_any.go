@@ -1,6 +1,7 @@
 package stringhelper
 
 import (
+	"iter"
 	"strings"
 	"unicode/utf8"
 )
@@ -16,6 +17,35 @@ func SplitAny(source string, separators string) []string {
 // It returns at most n substrings; the last substring will be the unsplit remainder.
 func SplitAnyN(source string, separators string, n int) []string {
 	return genSplitAny(source, separators, n)
+}
+
+// SplitAnySeq returns an iterator over all substrings of s separated by separator.
+// The iterator yields the same strings that would be returned by [SplitAny](source, separators),
+// but without constructing the slice.
+// It returns a single-use iterator.
+func SplitAnySeq(source string, separators string) iter.Seq[string] {
+	if len(separators) == 0 {
+		return explodeSeq(source)
+	}
+
+	return func(yield func(string) bool) {
+		for {
+			pos := strings.IndexAny(source, separators)
+			if pos < 0 {
+				break
+			}
+			frag := source[:pos]
+			if !yield(frag) {
+				return
+			}
+
+			// size should have been returned by IndexAny.
+			_, size := utf8.DecodeRuneInString(source[pos:])
+			source = source[pos+size:]
+		}
+
+		yield(source)
+	}
 }
 
 // CountAny counts all occurrences of any character in the separators string.
@@ -111,4 +141,17 @@ func explodeN(source string, n int) []string {
 	}
 
 	return result
+}
+
+// explodeSeq returns an iterator over the runes in s.
+func explodeSeq(source string) iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for len(source) > 0 {
+			_, size := utf8.DecodeRuneInString(source)
+			if !yield(source[:size]) {
+				return
+			}
+			source = source[size:]
+		}
+	}
 }

@@ -20,12 +20,13 @@
 //
 // Author: Frank Schwab
 //
-// Version: 2.1.0
+// Version: 3.0.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
 //    2025-03-15: V2.0.0: Parallelize decryption.
 //    2025-03-17: V2.1.0: Use clear.
+//    2025-03-23: V3.0.0: Refactored interface.
 //
 
 package transposition
@@ -35,35 +36,50 @@ import (
 	"sync"
 )
 
-// UnTransposeRuneArray reverts a transposition with the given passwords.
-// Attention: source is overwritten, if there is more than one password!
-func UnTransposeRuneArray(source []rune, passwords []string) []rune {
+// UntransposeRuneArrayToTarget reverts a transposition with the given password to the given target.
+func UntransposeRuneArrayToTarget(target []rune, source []rune, password string) {
 	sourceLen := len(source)
-	result := make([]rune, sourceLen)
+
+	offsets := columnOrder(password)
+	transposeLen := len(offsets)
+
+	var wg sync.WaitGroup
+	sourceIndex := 0
+	for _, offset := range offsets {
+		// Untranspose each column in parallel.
+		wg.Add(1)
+		go untransposeColumn(&wg, target, source, sourceLen, transposeLen, offset, sourceIndex)
+
+		sourceIndex += columnLen(sourceLen, transposeLen, offset)
+	}
+
+	wg.Wait()
+
+	clear(offsets)
+}
+
+// UntransposeRuneArray transposes a rune array with the given password.
+func UntransposeRuneArray(source []rune, password string) []rune {
+	result := make([]rune, len(source))
+	UntransposeRuneArrayToTarget(result, source, password)
+	return result
+}
+
+// UntransposeRuneArrayMultiplePasswords transposes a rune array with multiple passwords.
+// Side effects: Source is overwritten, if there is more than one password.
+// The list of passwords is reversed.
+func UntransposeRuneArrayMultiplePasswords(source []rune, passwords []string) []rune {
+	result := make([]rune, len(source))
+
+	// Passwords must be applied in reverse for untransposition.
+	slices.Reverse(passwords)
 
 	from := result
 	to := source
-	// For decryption passwords have to be used last to first.
-	slices.Reverse(passwords)
 	for _, password := range passwords {
 		from, to = to, from
 
-		offsets := columnOrder(password)
-		transposeLen := len(offsets)
-
-		var wg sync.WaitGroup
-		sourceIndex := 0
-		for _, offset := range offsets {
-			// Untranspose each column in parallel.
-			wg.Add(1)
-			go untransposeColumn(&wg, from, to, sourceLen, transposeLen, offset, sourceIndex)
-
-			sourceIndex += columnLen(sourceLen, transposeLen, offset)
-		}
-
-		wg.Wait()
-
-		clear(offsets)
+		UntransposeRuneArrayToTarget(to, from, password)
 	}
 
 	return to
@@ -74,8 +90,8 @@ func UnTransposeRuneArray(source []rune, passwords []string) []rune {
 // untransposeColumn untransposes a column.
 func untransposeColumn(
 	wg *sync.WaitGroup,
-	from []rune,
 	to []rune,
+	from []rune,
 	sourceLen int,
 	transposeLen int,
 	offset int,
