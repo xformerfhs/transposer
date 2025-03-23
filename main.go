@@ -152,9 +152,9 @@ func realMain() int {
 		// 3.3 Transpose the input runes.
 		var resultContent []rune
 		if doEncrypt {
-			resultContent = transposition.TransposeRuneArrayMultiplePasswords(inputContent, passwords)
+			resultContent = transposition.TransposeMultiplePasswords(inputContent, passwords)
 		} else {
-			resultContent = transposition.UntransposeRuneArrayMultiplePasswords(inputContent, passwords)
+			resultContent = transposition.UntransposeMultiplePasswords(inputContent, passwords)
 		}
 
 		// 3.4 Write the output file with the correct encoding.

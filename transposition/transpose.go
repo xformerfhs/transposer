@@ -20,13 +20,14 @@
 //
 // Author: Frank Schwab
 //
-// Version: 3.0.0
+// Version: 4.0.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
 //    2025-03-15: V2.0.0: Parallelize encryption.
 //    2025-03-17: V2.1.0: Use clear.
 //    2025-03-23: V3.0.0: Refactored interface.
+//    2025-03-23: V4.0.0: Make generic.
 //
 
 package transposition
@@ -37,8 +38,8 @@ import (
 
 // ******** Public functions ********
 
-// TransposeRuneArrayToTarget transposes a rune array with the given password to the given target.
-func TransposeRuneArrayToTarget(target []rune, source []rune, password string) {
+// TransposeToTarget transposes a slice with the given password to the given target.
+func TransposeToTarget[S ~[]T, T any](target S, source S, password string) {
 	sourceLen := len(source)
 
 	offsets := columnOrder(password)
@@ -59,23 +60,23 @@ func TransposeRuneArrayToTarget(target []rune, source []rune, password string) {
 	clear(offsets)
 }
 
-// TransposeRuneArray transposes a rune array with the given password.
-func TransposeRuneArray(source []rune, password string) []rune {
-	result := make([]rune, len(source))
-	TransposeRuneArrayToTarget(result, source, password)
+// Transpose transposes a slice with the given password.
+func Transpose[S ~[]T, T any](source S, password string) S {
+	result := make(S, len(source))
+	TransposeToTarget(result, source, password)
 	return result
 }
 
-// TransposeRuneArrayMultiplePasswords transposes a rune array with multiple passwords.
+// TransposeMultiplePasswords transposes a rune array with multiple passwords.
 // Side effect: Source is overwritten, if there is more than one password.
-func TransposeRuneArrayMultiplePasswords(source []rune, passwords []string) []rune {
-	result := make([]rune, len(source))
+func TransposeMultiplePasswords[S ~[]T, T any](source S, passwords []string) S {
+	result := make(S, len(source))
 	from := result
 	to := source
 	for _, password := range passwords {
 		from, to = to, from
 
-		TransposeRuneArrayToTarget(to, from, password)
+		TransposeToTarget(to, from, password)
 	}
 
 	return to
@@ -84,10 +85,10 @@ func TransposeRuneArrayMultiplePasswords(source []rune, passwords []string) []ru
 // ******** Private functions ********
 
 // transposeColumn transposes a column.
-func transposeColumn(
+func transposeColumn[S ~[]T, T any](
 	wg *sync.WaitGroup,
-	to []rune,
-	from []rune,
+	to S,
+	from S,
 	sourceLen int,
 	transposeLen int,
 	offset int,

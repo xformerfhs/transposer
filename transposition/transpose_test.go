@@ -85,7 +85,7 @@ func buildRandomPassword(l int) string {
 // TestTransposeKnown transposes a known source and compares the result with the known result.
 func TestTransposeKnown(t *testing.T) {
 	source := buildSource(100)
-	transposed := transposition.TransposeRuneArrayMultiplePasswords(source, knownPasswords)
+	transposed := transposition.TransposeMultiplePasswords(source, knownPasswords)
 	if !slices.Equal(transposed, expected100) {
 		t.Fatalf(fmtExpectedActual, expected100, transposed)
 	}
@@ -94,7 +94,7 @@ func TestTransposeKnown(t *testing.T) {
 // TestUntransposeKnown transposes a known transposed source and compares the result with the known source.
 func TestUntransposeKnown(t *testing.T) {
 	expected := buildSource(100)
-	transposed := transposition.UntransposeRuneArrayMultiplePasswords(expected100, knownPasswords)
+	transposed := transposition.UntransposeMultiplePasswords(expected100, knownPasswords)
 	if !slices.Equal(transposed, expected) {
 		t.Fatalf(fmtExpectedActual, expected100, transposed)
 	}
@@ -115,8 +115,8 @@ func TestTransposeRandom(t *testing.T) {
 		sourceSafe := make([]rune, len(source))
 		copy(sourceSafe, source)
 
-		transposed := transposition.TransposeRuneArrayMultiplePasswords(source, passwords)
-		untransposed := transposition.UntransposeRuneArrayMultiplePasswords(transposed, passwords)
+		transposed := transposition.TransposeMultiplePasswords(source, passwords)
+		untransposed := transposition.UntransposeMultiplePasswords(transposed, passwords)
 
 		if !slices.Equal(untransposed, sourceSafe) {
 			t.Fatalf(fmtExpectedActual, sourceSafe, untransposed)
