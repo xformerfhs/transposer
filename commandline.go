@@ -204,10 +204,10 @@ func printUsageFunction() {
 	w := flag.CommandLine.Output()
 
 	_, _ = fmt.Fprintf(w,
-		"\nUsage:\n   %s encrypt -encoding {input[:output]} {-passwords {transpositionPasswords} | -password-file {filename}] -case [upper|lower] -onlyletters {inputFilePath...}",
+		"\nUsage:\n   %s encrypt -encoding {input[:output]} {-passwords {transpositionPasswords} | -passwords-file {filename}] -case [upper|lower] -onlyletters {inputFilePath...}",
 		myName)
 	_, _ = fmt.Fprintf(w,
-		"\n   %s decrypt -encoding {input[:output]} {-passwords {transpositionPasswords} | -password-file {filename}] {inputFilePath...}\n",
+		"\n   %s decrypt -encoding {input[:output]} {-passwords {transpositionPasswords} | -passwords-file {filename}] {inputFilePath...}\n",
 		myName)
 	_, _ = fmt.Fprintf(w,
 		"\n   %s help\n",
@@ -233,10 +233,10 @@ func printUsageFunction() {
 	_, _ = fmt.Fprintln(w)
 	_, _ = fmt.Fprintf(w, "Maximum file size is %s bytes.\n", numberformat.FormatInt(maxFileSize))
 	_, _ = fmt.Fprintln(w, `Output is written to the {inputFilepath} with '_trans' or '_untrans' added to the file name.`)
-	_, _ = fmt.Fprintln(w, `The passwords can either be specified by '-passwords' or 'password-file', but not both.`)
-	_, _ = fmt.Fprintln(w, `If '-password-file' is specified, the passwords are read from specified file.`)
+	_, _ = fmt.Fprintln(w, `The passwords can either be specified by '-passwords' or 'passwords-file', but not both.`)
+	_, _ = fmt.Fprintln(w, `If '-passwords-file' is specified, the passwords are read from specified file.`)
 	_, _ = fmt.Fprintln(w, `The passwords are one string separated by ':' or ','.`)
-	_, _ = fmt.Fprintln(w, `In a password file they can also be separated by a new line.`)
+	_, _ = fmt.Fprintln(w, `In a password file they can also be separated by new line.`)
 	_, _ = fmt.Fprintf(w, "There can be up to %s passwords with a maximum total length of %s characters, including separators\n",
 		numberformat.FormatInt(maxNumPasswords),
 		numberformat.FormatInt(maxPasswordsLen))
