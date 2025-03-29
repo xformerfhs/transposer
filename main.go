@@ -31,7 +31,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -40,8 +39,6 @@ import (
 	"transposer/encodinghelper"
 	"transposer/filehelper"
 	"transposer/logger"
-	"transposer/mathhelper"
-	"transposer/stringhelper"
 	"transposer/transposition"
 )
 
@@ -202,84 +199,4 @@ func checkCommand() (bool, int, bool) {
 	doEncrypt := cmd == 'e'
 
 	return doEncrypt, rcOK, false
-}
-
-// getPasswords analyzes the passwordSpec string and returns all given passwords as a slice.
-// The passwords are converted to all lower-case. This is done to prevent weakening of the
-// passwords by starting them with an upper-case letter and then continuing with lower
-// case letters, which would effectively remove one letter from the password strength.
-func getPasswords(password string) ([]string, error) {
-	elements := stringhelper.SplitAnyN(password, `:,`, maxNumPasswords+1)
-	if len(elements) > maxNumPasswords {
-		return nil, errors.New(`too many passwords`)
-	}
-
-	result := make([]string, len(elements))
-	for i, candidate := range elements {
-		if !stringhelper.IsAlphaNumeric(candidate) {
-			return nil, errors.New(`passwords must only contain alphanumeric characters`)
-		}
-		result[i] = strings.ToLower(candidate)
-	}
-
-	return result, nil
-}
-
-// checkPasswords checks the lengths of the passwords for a common divisor
-// which weakens the encryption.
-func checkPasswords(passwords []string) bool {
-	// 1. Get lengths of passwords
-	lengths, ok := passwordLengths(passwords)
-	if !ok {
-		return ok
-	}
-
-	logger.PrintInfof(mainMsgBase+10, `Password lengths: %v`, lengths)
-
-	// 2. Check password lengths for common divisors.
-	return checkPasswordLengths(passwords, lengths)
-}
-
-// passwordLengths creates a slice of the password lengths and checks them for valid lengths.
-func passwordLengths(passwords []string) ([]int, bool) {
-	ok := true
-	lengths := make([]int, len(passwords))
-
-	for i, pw := range passwords {
-		pwl := len(pw)
-		if pwl < minPasswordLen {
-			logger.PrintErrorf(mainMsgBase+11, `Password '%s' is too short`, pw)
-			ok = false
-		}
-
-		lengths[i] = pwl
-	}
-
-	return lengths, ok
-}
-
-// checkPasswordLengths checks the lengths
-func checkPasswordLengths(passwords []string, lengths []int) bool {
-	ok := true
-	pwLen := len(passwords)
-
-	for i := 0; i < pwLen-1; i++ {
-		li := lengths[i]
-		for j := i + 1; j < pwLen; j++ {
-			lj := lengths[j]
-			gcd := mathhelper.Gcd(li, lj)
-			if gcd != 1 {
-				logger.PrintErrorf(mainMsgBase+12,
-					`The lengths of the passwords '%s' (%d) and '%s' (%d) share a common divisor: %d`,
-					passwords[i],
-					li,
-					passwords[j],
-					lj,
-					gcd)
-				ok = false
-			}
-		}
-	}
-
-	return ok
 }
