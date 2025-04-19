@@ -174,7 +174,7 @@ func processConversionFlag() error {
 			useConversion = true
 			toLower = false
 		default:
-			return fmt.Errorf(`unknown paramConversion: '%s'`, paramConversion)
+			return fmt.Errorf(`unknown conversion: '%s'`, paramConversion)
 		}
 	} else {
 		return ErrNoConversionType
