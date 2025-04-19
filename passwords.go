@@ -20,10 +20,11 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.0.0
+// Version: 2.0.0
 //
 // Change history:
 //    2025-03-28: V1.0.0: Created.
+//    2025-04-19: V2.0.0: Restructured.
 //
 
 // File passwords contains all functions dealing with passwords.
@@ -33,148 +34,155 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"transposer/filehelper"
-	"transposer/logger"
 	"transposer/mathhelper"
 	"transposer/stringhelper"
 )
 
-// getPasswordList gets the password list from whatever source is specified.
-func getPasswordList() (string, error) {
-	listLen := len(passwordList)
+// ******** Private constants ********
+
+// -------- Errors --------
+
+// ErrMultiplePasswordSources is returned when multiple password sources where specified.
+var ErrMultiplePasswordSources = errors.New(`multiple password sources specified`)
+
+// ErrNoPasswordSources is returned when no password sources where specified.
+var ErrNoPasswordSources = errors.New(`no passwords supplied`)
+
+// ErrPasswordsTooLong is returned when the byte count of the passwords is too long.
+var ErrPasswordsTooLong = errors.New(`passwords are too long`)
+
+// ErrTooManyPasswords is returned when there are more passwords than allowed.
+var ErrTooManyPasswords = errors.New(`too many passwords`)
+
+// ErrInvalidPasswordFile is returned when a password file is not valid.
+var ErrInvalidPasswordFile = errors.New(`password file is empty or not a normal file`)
+
+// ******** Public functions ********
+
+// GetPasswords gets the passwords from either the passwords text or the passwords file.
+func GetPasswords() ([]string, error) {
+	listLen := len(paramPasswordsText)
 	if listLen != 0 {
-		if len(passwordFile) != 0 {
-			return ``, ErrMultiplePasswordSources
+		if len(paramPasswordsFile) != 0 {
+			return nil, ErrMultiplePasswordSources
 		}
 
 		if listLen > maxPasswordsLen {
-			return ``, ErrPasswordsTooLong
+			return nil, ErrPasswordsTooLong
 		}
 
-		return strings.TrimSpace(passwordList), nil
+		return readPasswordsFromText(paramPasswordsText)
 	} else {
-		if len(passwordFile) != 0 {
-			return readPasswordsFromFile()
+		if len(paramPasswordsFile) != 0 {
+			return readPasswordsFromFile(paramPasswordsFile)
 		} else {
-			return ``, ErrNoPasswordSources
+			return nil, ErrNoPasswordSources
 		}
 	}
 }
 
-// readPasswordsFromFile reads the passwords from a file.
-func readPasswordsFromFile() (string, error) {
-	size, err := filehelper.FileSize(passwordFile)
-	if err != nil {
-		return ``, err
+// NormalizeAndCheckPasswords normalizes and validates a list of passwords,
+// returning errors for invalid passwords.
+func NormalizeAndCheckPasswords(passwords []string) []error {
+	lengths, errorList := normalizePasswords(passwords)
+	if len(errorList) != 0 {
+		return errorList
 	}
 
-	if size < minPasswordLen {
-		return ``, ErrPasswordsTooShort
+	return checkPasswordLengths(passwords, lengths)
+}
+
+// ******** Private functions ********
+
+// readPasswordsFromText converts a password text into a slice of passwords, ensuring a maximum number of them.
+// Returns the passwords as a slice of strings or an error if the constraint is violated.
+func readPasswordsFromText(passwordsText string) ([]string, error) {
+	elements := stringhelper.SplitAnyN(passwordsText, `:,`, maxNumPasswords+1)
+	if len(elements) > maxNumPasswords {
+		return nil, ErrTooManyPasswords
+	}
+
+	return elements, nil
+}
+
+// readPasswordsFromFile reads the passwords from a file.
+func readPasswordsFromFile(passwordsFileName string) ([]string, error) {
+	size, err := filehelper.FileSize(passwordsFileName)
+	if err != nil {
+		return nil, err
+	}
+
+	if size == 0 {
+		return nil, ErrInvalidPasswordFile
 	}
 
 	if size > maxPasswordsLen+32 {
-		return ``, ErrPasswordsTooLong
+		return nil, ErrPasswordsTooLong
 	}
 
 	var file *os.File
-	file, err = os.Open(passwordFile)
+	file, err = os.Open(passwordsFileName)
 	if err != nil {
-		return ``, err
+		return nil, err
 	}
 	defer filehelper.CloseWithName(file)
 
 	// Create a new scanner to read the file line by line.
 	scanner := bufio.NewScanner(file)
 
-	sb := stringhelper.NewBuilder(int(size))
-	next := false
+	result := make([]string, 0, maxNumPasswords)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if len(line) == 0 {
 			continue
 		}
 
-		if next {
-			_, _ = sb.WriteRune(':')
-		} else {
-			next = true
-		}
-
-		_, _ = sb.WriteString(line)
+		result = append(result, line)
 	}
 
 	// Check for errors during the scan
 	if err = scanner.Err(); err != nil {
-		return ``, err
-	}
-
-	if sb.Len() > maxPasswordsLen {
-		return ``, ErrPasswordsTooLong
-	}
-
-	return sb.String(), nil
-}
-
-// processPasswordList analyzes the passwordList string and returns all given passwords as a slice.
-// The passwords are converted to all lower-case. This is done to prevent weakening of the
-// passwords by starting them with an upper-case letter and then continuing with lower
-// case letters, which would effectively remove one letter from the password strength.
-func processPasswordList(password string) ([]string, error) {
-	elements := stringhelper.SplitAnyN(password, `:,`, maxNumPasswords+1)
-	if len(elements) > maxNumPasswords {
-		return nil, errors.New(`too many passwords`)
-	}
-
-	result := make([]string, len(elements))
-	for i, candidate := range elements {
-		if !stringhelper.IsAlphaNumeric(candidate) {
-			return nil, errors.New(`passwords must only contain alphanumeric characters`)
-		}
-
-		result[i] = strings.ToLower(candidate)
+		return nil, err
 	}
 
 	return result, nil
 }
 
-// checkPasswords checks the lengths of the passwords for a common divisor
-// which weakens the encryption.
-func checkPasswords(passwords []string) bool {
-	// 1. Get lengths of passwords
-	lengths, ok := passwordLengths(passwords)
-	if !ok {
-		return ok
-	}
-
-	logger.PrintInfof(mainMsgBase+10, `Password lengths: %v`, lengths)
-
-	// 2. Check password lengths for common divisors.
-	return checkPasswordLengths(passwords, lengths)
-}
-
-// passwordLengths creates a slice of the password lengths and checks them for valid lengths.
-func passwordLengths(passwords []string) ([]int, bool) {
-	ok := true
+// normalizePasswords checks the given list of passwords for invalid characters and normalizes them.
+// It also checks the lengths of the passwords.
+// Returns a slice of errors for all passwords that are invalid.
+// The passwords are normalized by converting them to lower case. This is done to prevent weakening
+// of the passwords by starting them with an upper-case letter and then continuing with lower
+// case letters, which would effectively remove one letter from the password strength.
+func normalizePasswords(passwords []string) ([]int, []error) {
+	errorList := make([]error, 0, len(passwords))
 	lengths := make([]int, len(passwords))
-
-	for i, pw := range passwords {
-		pwl := len(pw)
-		if pwl < minPasswordLen {
-			logger.PrintErrorf(mainMsgBase+11, `Password '%s' is too short`, pw)
-			ok = false
+	for i, password := range passwords {
+		pwLen := len(password)
+		lengths[i] = pwLen
+		if pwLen < minPasswordLen {
+			errorList = append(errorList, fmt.Errorf(`password '%s' is too short`, password))
+			continue
 		}
 
-		lengths[i] = pwl
+		if !stringhelper.IsAlphaNumeric(password) {
+			errorList = append(errorList, fmt.Errorf(`password '%s' is not alphanumeric`, password))
+		}
+
+		passwords[i] = strings.ToLower(password)
 	}
 
-	return lengths, ok
+	return lengths, errorList
 }
 
-// checkPasswordLengths checks the lengths
-func checkPasswordLengths(passwords []string, lengths []int) bool {
-	ok := true
+// checkPasswordLengths checks the lengths of the passwords for a common divisor
+// which weakens the encryption.
+func checkPasswordLengths(passwords []string, lengths []int) []error {
+	result := make([]error, 0, len(passwords))
 	pwLen := len(passwords)
 
 	for i := 0; i < pwLen-1; i++ {
@@ -183,17 +191,17 @@ func checkPasswordLengths(passwords []string, lengths []int) bool {
 			lj := lengths[j]
 			gcd := mathhelper.Gcd(li, lj)
 			if gcd != 1 {
-				logger.PrintErrorf(mainMsgBase+12,
-					`The lengths of the passwords '%s' (%d) and '%s' (%d) share a common divisor: %d`,
-					passwords[i],
-					li,
-					passwords[j],
-					lj,
-					gcd)
-				ok = false
+				result = append(result,
+					fmt.Errorf(
+						`the lengths of the passwords '%s' (%d) and '%s' (%d) share a common divisor: %d`,
+						passwords[i],
+						li,
+						passwords[j],
+						lj,
+						gcd))
 			}
 		}
 	}
 
-	return ok
+	return result
 }

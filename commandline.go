@@ -20,10 +20,11 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.0.0
+// Version: 1.1.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
+//    2025-04-19: V1.1.0: New password handling.
 //
 
 // File commandline contains the functions that parse the command line in the main program.
@@ -44,19 +45,20 @@ import (
 
 // -------- Command line variables --------
 
-// fileEncoding contains the file encoding string from the command line.
-var fileEncoding string
+// paramFileEncoding contains the file encoding string from the command line.
+var paramFileEncoding string
 
-// passwordList contains the passwords string from the command line.
-var passwordList string
+// paramPasswordsText contains the passwords string from the command line.
+var paramPasswordsText string
 
-var passwordFile string
+// paramPasswordsFile contains the name of the passwords file from the command line.
+var paramPasswordsFile string
 
-// conversion contains the convert string from the command line.
-var conversion string
+// paramConversion contains the convert string from the command line.
+var paramConversion string
 
-// onlyLetters contains the onlyletters value from the command line.
-var onlyLetters bool
+// paramOnlyLetters contains the onlyletters value from the command line.
+var paramOnlyLetters bool
 
 // -------- Variables derived from the command line --------
 
@@ -64,7 +66,7 @@ var onlyLetters bool
 var useConversion bool
 
 // toLower indicates that characters are converted to lower case.
-// If useConversion is true and toLower is false characters are converted to upper case.
+// If useConversion is true and toLower is false, characters are converted to upper case.
 var toLower bool
 
 // passwords contains the list of passwords from the command line.
@@ -83,22 +85,10 @@ var decryptFlagSet = flag.NewFlagSet(`decrypt`, flag.ExitOnError)
 
 // -------- Errors --------
 
-// ErrMultiplePasswordSources is returned, when multiple password sources where specified.
-var ErrMultiplePasswordSources = errors.New(`multiple password sources specified`)
-
-// ErrNoPasswordSources is returned, when no password sources where specified.
-var ErrNoPasswordSources = errors.New(`no passwords supplied`)
-
-// ErrPasswordsTooShort is returned, when byte count of the passwords is too short.
-var ErrPasswordsTooShort = errors.New(`passwords are too short or file name is not a normal file`)
-
-// ErrPasswordsTooLong is returned, when byte count of the passwords is too long.
-var ErrPasswordsTooLong = errors.New(`passwords are too long`)
-
-// ErrNoInputFiles is returned, when no input files were specified.
+// ErrNoInputFiles is returned when no input files were specified.
 var ErrNoInputFiles = errors.New(`no input file present`)
 
-// ErrNoConversionType is returned, when the "case" option was given without a value.
+// ErrNoConversionType is returned when the "case" option was given without a value.
 var ErrNoConversionType = errors.New(`no conversion type specified`)
 
 // ******** Private functions ********
@@ -108,18 +98,18 @@ func defineCommandlineFlags() {
 	encodingName := encodinghelper.PlatformDefaultEncodingName()
 
 	// 1. Encryption.
-	encryptFlagSet.StringVar(&fileEncoding, `encoding`, encodingName, `character encoding for input[:output] (separated by ':' or ','`)
-	encryptFlagSet.StringVar(&passwordList, `passwords`, ``, `Transposition password(s) (separated by ':' or ',', if there is more than one)`)
-	encryptFlagSet.StringVar(&passwordFile, `passwords-file`, ``, `File which contains the transposition password(s) (separated by ':' or ',', if there is more than one)`)
-	encryptFlagSet.StringVar(&conversion, `case`, ``, `Characters are converted to 'lower' or 'upper' case`)
-	encryptFlagSet.BoolVar(&onlyLetters, `onlyletters`, false, `If set only letters are read and transposed (default: All characters are read)`)
+	encryptFlagSet.StringVar(&paramFileEncoding, `encoding`, encodingName, `character encoding for input[:output] (separated by ':' or ','`)
+	encryptFlagSet.StringVar(&paramPasswordsText, `passwords`, ``, `Transposition password(s) (separated by ':' or ',', if there is more than one)`)
+	encryptFlagSet.StringVar(&paramPasswordsFile, `passwords-file`, ``, `File which contains the transposition password(s) (one password per line, empty lines are ignored)`)
+	encryptFlagSet.StringVar(&paramConversion, `case`, ``, `Characters are converted to 'lower' or 'upper' case`)
+	encryptFlagSet.BoolVar(&paramOnlyLetters, `onlyletters`, false, `If set only letters are read and transposed (default: All characters are read)`)
 
 	encryptFlagSet.Usage = printUsageFunction
 
 	// 2. Decryption.
-	decryptFlagSet.StringVar(&fileEncoding, `encoding`, encodingName, `character encoding for input[:output]`)
-	decryptFlagSet.StringVar(&passwordList, `passwords`, ``, `Transposition passwordList(s) (separated by ':', if there is more than one)`)
-	decryptFlagSet.StringVar(&passwordFile, `passwords-file`, ``, `File which contains the transposition password(s) (separated by ':' or ',', if there is more than one)`)
+	decryptFlagSet.StringVar(&paramFileEncoding, `encoding`, encodingName, `character encoding for input[:output]`)
+	decryptFlagSet.StringVar(&paramPasswordsText, `passwords`, ``, `Transposition password(s) (separated by ':' or ',', if there is more than one)`)
+	decryptFlagSet.StringVar(&paramPasswordsFile, `passwords-file`, ``, `File which contains the transposition password(s) (one password per line, empty lines are ignored)`)
 
 	decryptFlagSet.Usage = printUsageFunction
 }
@@ -152,21 +142,15 @@ func checkCommandlineFlags(doEncrypt bool) error {
 		return ErrNoInputFiles
 	}
 
-	// 2. Check that passwords is set and not too long.
-	passwordList, err = getPasswordList()
-	if err != nil {
-		return err
-	}
-
-	// 3. Convert the passwords string to a list of passwords.
-	passwords, err = processPasswordList(passwordList)
+	// 2. Get the passwords from either source.
+	passwords, err = GetPasswords()
 	if err != nil {
 		return err
 	}
 
 	if doEncrypt {
-		// 4. Check conversion string for encryption.
-		if len(conversion) != 0 {
+		// 3. Check conversion string for encryption.
+		if len(paramConversion) != 0 {
 			err = processConversionFlag()
 			if err != nil {
 				return err
@@ -177,12 +161,12 @@ func checkCommandlineFlags(doEncrypt bool) error {
 	return nil
 }
 
-// processConversionFlag analyzes the conversion flag and sets the corresponding variables.
+// processConversionFlag analyzes the paramConversion flag and sets the corresponding variables.
 func processConversionFlag() error {
-	conversion = strings.ToLower(strings.TrimSpace(conversion))
+	paramConversion = strings.ToLower(strings.TrimSpace(paramConversion))
 
-	if len(conversion) != 0 {
-		switch conversion[0] {
+	if len(paramConversion) != 0 {
+		switch paramConversion[0] {
 		case 'l':
 			useConversion = true
 			toLower = true
@@ -190,7 +174,7 @@ func processConversionFlag() error {
 			useConversion = true
 			toLower = false
 		default:
-			return fmt.Errorf(`unknown conversion: '%s'`, conversion)
+			return fmt.Errorf(`unknown paramConversion: '%s'`, paramConversion)
 		}
 	} else {
 		return ErrNoConversionType

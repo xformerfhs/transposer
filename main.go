@@ -20,10 +20,11 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.0.0
+// Version: 1.1.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
+//    2025-04-19: V1.1.0: Restructured password handling.
 //
 
 // This is the main program file.
@@ -54,13 +55,13 @@ const minPasswordLen = 6
 const maxPasswordsLen = 40_000
 
 // maxNumPasswords is the maximum possible number of passwords.
-const maxNumPasswords = 100
+const maxNumPasswords = 30
 
 // fmtEncodedFileOperation contains the format for encoded file operation messages.
 const fmtEncodedFileOperation = `%s file '%s' with %s encoding`
 
-// myVersion contains the version of this program. Update it, when anything changes.
-const myVersion = `1.0.0`
+// myVersion contains the version of this program. Update it when anything changes.
+const myVersion = `1.1.0`
 
 // mainMsgBase is the base number for program messages.
 const mainMsgBase = 10
@@ -100,18 +101,19 @@ func realMain() int {
 		return printUsageError(mainMsgBase+2, err.Error())
 	}
 
-	// 2. Process command line arguments.
-	if !checkPasswords(passwords) {
-		return rcParameterError
+	errorList := NormalizeAndCheckPasswords(passwords)
+	if len(errorList) != 0 {
+		return printParameterErrorList(mainMsgBase+3, `Password error`, errorList)
 	}
 
+	// 2. Process command line arguments.
 	var inputEncodingName string
 	var outputEncodingName string
 	var handleBom BomHandling
 
-	inputEncodingName, outputEncodingName, handleBom, err = GetEncodings(fileEncoding)
+	inputEncodingName, outputEncodingName, handleBom, err = GetEncodings(paramFileEncoding)
 	if err != nil {
-		return printUsageError(mainMsgBase+3, err.Error())
+		return printUsageError(mainMsgBase+4, err.Error())
 	}
 
 	// 3. Loop through input files.
@@ -122,7 +124,7 @@ func realMain() int {
 		var hasBom bool
 		fileBomEncodingName, hasBom, err = encodinghelper.ProbeFile(inputFilePath)
 		if err != nil {
-			return printProcessingError(mainMsgBase+4, err.Error())
+			return printProcessingError(mainMsgBase+5, err.Error())
 		}
 
 		// If it has a BOM and the input encoding is different from it, change the input encoding.
@@ -132,7 +134,7 @@ func realMain() int {
 
 		// 3.2 Read the input with the specified encoding and transformation options and put the
 		//     result in a rune slice.
-		logger.PrintInfof(mainMsgBase+5, fmtEncodedFileOperation, `Read`, inputFilePath, actInputEncodingName)
+		logger.PrintInfof(mainMsgBase+6, fmtEncodedFileOperation, `Read`, inputFilePath, actInputEncodingName)
 		var inputContent []rune
 		var useWindowsLineBreak bool
 		inputContent, useWindowsLineBreak, err = encodedfile.ReadRunes(
@@ -141,9 +143,9 @@ func realMain() int {
 			actInputEncodingName,
 			useConversion,
 			toLower,
-			onlyLetters)
+			paramOnlyLetters)
 		if err != nil {
-			return printProcessingError(mainMsgBase+6, err.Error())
+			return printProcessingError(mainMsgBase+7, err.Error())
 		}
 
 		// 3.3 Transpose the input runes.
@@ -156,7 +158,7 @@ func realMain() int {
 
 		// 3.4 Write the output file with the correct encoding.
 		outputFilePath := BuildOutFilePath(doEncrypt, inputFilePath)
-		logger.PrintInfof(mainMsgBase+7, fmtEncodedFileOperation, `Write`, outputFilePath, outputEncodingName)
+		logger.PrintInfof(mainMsgBase+8, fmtEncodedFileOperation, `Write`, outputFilePath, outputEncodingName)
 		err = encodedfile.WriteEncoded(
 			outputFilePath,
 			outputEncodingName,
@@ -165,7 +167,7 @@ func realMain() int {
 			resultContent)
 
 		if err != nil {
-			return printProcessingError(mainMsgBase+8, err.Error())
+			return printProcessingError(mainMsgBase+9, err.Error())
 		}
 	}
 
@@ -180,7 +182,7 @@ func checkCommand() (bool, int, bool) {
 	cmd := strings.ToLower(strings.TrimSpace(os.Args[1]))[0]
 
 	if cmd != 'd' && cmd != 'e' && cmd != 'h' && cmd != 'v' {
-		return false, printUsageErrorf(mainMsgBase+9, `Invalid command: '%s'`, os.Args[1]), true
+		return false, printUsageErrorf(mainMsgBase+10, `Invalid command: '%s'`, os.Args[1]), true
 	}
 
 	// Print help

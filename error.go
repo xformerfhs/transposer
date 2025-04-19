@@ -20,10 +20,11 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.0.0
+// Version: 2.0.0
 //
 // Change history:
 //    2024-12-29: V1.0.0: Created.
+//    2025-04-19: V2.0.0: Added printParameterErrorList.
 //
 
 // File error contains the functions that handle errors in the main program.
@@ -72,4 +73,12 @@ func printProcessingError(msgNum byte, msgText string) int {
 func printProcessingErrorf(msgNum byte, msgFormat string, a ...any) int {
 	logger.PrintErrorf(msgNum, msgFormat, a...)
 	return rcProcessingError
+}
+
+// printParameterErrorList prints a list of errors with a prefix.
+func printParameterErrorList(msgNum byte, prefix string, errorList []error) int {
+	for _, err := range errorList {
+		logger.PrintErrorf(msgNum, "%s: %s", prefix, err.Error())
+	}
+	return rcParameterError
 }
