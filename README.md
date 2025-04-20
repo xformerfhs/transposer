@@ -35,7 +35,7 @@ Both lengths are divisible by 2.
 This common factor means that the combined transposition with both passwords also has this common factor in the transposed characters.
 This weakens the encryption considerably.
 
-So, this program refuses to work when the lengths of the passwords have a common factor.
+Using passwords with lengths that have a common factor will produce an error message.
 
 Transposition ciphers are only secure for long texts and long passwords.
 This program enforces a minimum password length of 6 characters.
@@ -44,6 +44,9 @@ However, the length of the clear text is up to the user.
 It should be at least a thousand characters, and the passwords should be long and random, like e.g. these two:
 `fmejivhguqvlsd1esl5f2mbo0vowl5c3oh93deacosymu1vk0qes4064bqoemuiwxsz2c0sru97yzfmzg9i58jczg`
 `wm2zmxrvz0idg7iox2k8fb9suzezcdqfrejjrj3ed2qzrl73c769eutl7ipihmlii3zdcfg7zamo3lt`
+
+This program has been created for educational purposes.
+I use it in my cryptography teachings to show how transposition works and what the strengths and weaknesses are.
 
 ## Calls
 
