@@ -77,7 +77,8 @@ func main() {
 	os.Exit(realMain())
 }
 
-// realMain is the real main program.
+// realMain is the real main program. It has an exit code and obeys defers.
+// This is how a main function should be.
 func realMain() int {
 	// 1. Process commands.
 	defineCommandlineFlags()
