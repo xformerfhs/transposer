@@ -85,12 +85,11 @@ The options have the following meaning:
 | `case`           | The letters of the source file are converted to either lower- or upper-case when reading the source files.                                |
 | `onlyletters`    | Only letters are read from the source files. All other characters are ignored.                                                            |
 
-One of the options `passwords` or `passwords-file` must be specified.
-The default encoding is `win1252` on Windows and `utf8` on all other operating systems.
-See below for an explanation of encodings.
-If only the input encoding is given, the output encoding is the same as the input encoding.
-If one of the encodings is empty, the default encoding is used.
-If the encoding is specified as `input-encoding:` or `input-encoding,` the output encoding is the same encoding as the input encoding.
+- One of the options `passwords` or `passwords-file` must be specified.
+- The default encoding is `win1252` on Windows and `utf8` on all other operating systems.
+- See below for an explanation of encodings.
+- If only the input encoding is given, the output encoding is the same as the input encoding.
+- If one of the encodings is empty, the default encoding is used.
 
 Each option can be started by either `-` or `--`.
 
@@ -113,11 +112,11 @@ The options have the following meaning:
 | `passwords`      | A list of passwords separated by either `:` or `,`. Mutually exclusive with `passwords-file`.                                             |
 | `passwords-file` | The path of a file that contains the passwords. Each line has one password. Blank lines are ignored. Mutually exclusive with `passwords`. |
 
-One of the options `passwords` or `passwords-file` must be specified.
-The default encoding is `win1252` on Windows and `utf8` on all other operating systems.
-See below for an explanation of encodings.
-If only the input encoding is given, the output encoding is the same as the input encoding.
-If one of the encodings is empty, the default encoding is used.
+- One of the options `passwords` or `passwords-file` must be specified.
+- The default encoding is `win1252` on Windows and `utf8` on all other operating systems.
+- See below for an explanation of encodings.
+- If only the input encoding is given, the output encoding is the same as the input encoding.
+- If one of the encodings is empty, the default encoding is used.
 
 Each option can be started by either `-` or `--`.
 
