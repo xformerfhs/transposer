@@ -20,11 +20,12 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.1.0
+// Version: 1.2.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
 //    2025-04-19: V1.1.0: Restructured password handling.
+//    2025-04-20: V1.2.0: Count runes in passwords, not bytes.
 //
 
 // This is the main program file.
@@ -61,7 +62,7 @@ const maxNumPasswords = 30
 const fmtEncodedFileOperation = `%s file '%s' with %s encoding`
 
 // myVersion contains the version of this program. Update it when anything changes.
-const myVersion = `1.1.0`
+const myVersion = `1.2.0`
 
 // mainMsgBase is the base number for program messages.
 const mainMsgBase = 10

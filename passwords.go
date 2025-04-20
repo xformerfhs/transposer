@@ -20,11 +20,12 @@
 //
 // Author: Frank Schwab
 //
-// Version: 2.0.0
+// Version: 2.1.0
 //
 // Change history:
 //    2025-03-28: V1.0.0: Created.
 //    2025-04-19: V2.0.0: Restructured.
+//    2025-04-20: V2.1.0: Count characters in passwords, not bytes.
 //
 
 // File passwords contains all functions dealing with passwords.
@@ -40,6 +41,7 @@ import (
 	"transposer/filehelper"
 	"transposer/mathhelper"
 	"transposer/stringhelper"
+	"unicode/utf8"
 )
 
 // ******** Private constants ********
@@ -162,7 +164,7 @@ func normalizePasswords(passwords []string) ([]int, []error) {
 	errorList := make([]error, 0, len(passwords))
 	lengths := make([]int, len(passwords))
 	for i, password := range passwords {
-		pwLen := len(password)
+		pwLen := utf8.RuneCountInString(password)
 		lengths[i] = pwLen
 		if pwLen < minPasswordLen {
 			errorList = append(errorList, fmt.Errorf(`password '%s' is too short`, password))
