@@ -178,7 +178,7 @@ func realMain() int {
 
 // ******** Private functions ********
 
-// checkCommand checks the given command and executes it, if it is 'help' or 'version'.
+// checkCommand checks the given command and executes it if it is 'help' or 'version'.
 // Otherwise, it only signals if the command was 'encrypt', or not.
 func checkCommand() (bool, int, bool) {
 	cmd := strings.ToLower(strings.TrimSpace(os.Args[1]))[0]

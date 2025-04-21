@@ -39,8 +39,8 @@ import "transposer/linkedlist"
 func columnOrder(source string) []int {
 	orderList := linkedlist.New()
 
-	// Range over a string returns the *byte offset* and the rune value
-	// So we have to use our own rune index
+	// Range over a string returns the *byte offset* and the rune value.
+	// So we have to use our own rune index.
 	i := 0
 
 	for _, char := range source {
