@@ -40,7 +40,7 @@ import (
 // ******** Private constants ********
 
 // fmtExpectedActual is the format expected and actual rune slice values.
-const fmtExpectedActual = `Expected: %c, Actual: %c`
+const fmtExpectedActual = "\nExpected: %c\nActual: %c\n"
 
 // pwLengths is the list of possible password lengths.
 var pwLengths = []int{2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31}
@@ -85,19 +85,23 @@ func buildRandomPassword(l int) string {
 // TestTransposeKnown transposes a known source and compares the result with the known result.
 func TestTransposeKnown(t *testing.T) {
 	source := buildSource(100)
-	transposed := transposition.TransposeMultiplePasswords(source, knownPasswords)
+	transpose := transposition.New[rune](knownPasswords)
+	transposed := transpose.Transpose(source)
 	if !slices.Equal(transposed, expected100) {
 		t.Fatalf(fmtExpectedActual, expected100, transposed)
 	}
+	transpose.Destroy()
 }
 
 // TestUntransposeKnown transposes a known transposed source and compares the result with the known source.
 func TestUntransposeKnown(t *testing.T) {
 	expected := buildSource(100)
-	transposed := transposition.UntransposeMultiplePasswords(expected100, knownPasswords)
+	transpose := transposition.New[rune](knownPasswords)
+	transposed := transpose.Untranspose(expected100)
 	if !slices.Equal(transposed, expected) {
 		t.Fatalf(fmtExpectedActual, expected100, transposed)
 	}
+	transpose.Destroy()
 }
 
 // TestTransposeRandom transposes a random source with a random number of random length passwords
@@ -115,11 +119,14 @@ func TestTransposeRandom(t *testing.T) {
 		sourceSafe := make([]rune, len(source))
 		copy(sourceSafe, source)
 
-		transposed := transposition.TransposeMultiplePasswords(source, passwords)
-		untransposed := transposition.UntransposeMultiplePasswords(transposed, passwords)
+		transpose := transposition.New[rune](passwords)
+		transposed := transpose.Transpose(source)
+		untransposed := transpose.Untranspose(transposed)
 
 		if !slices.Equal(untransposed, sourceSafe) {
 			t.Fatalf(fmtExpectedActual, sourceSafe, untransposed)
 		}
+
+		transpose.Destroy()
 	}
 }

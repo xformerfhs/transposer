@@ -20,12 +20,13 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.2.0
+// Version: 1.3.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
 //    2025-04-19: V1.1.0: Restructured password handling.
 //    2025-04-20: V1.2.0: Count runes in passwords, not bytes.
+//    2025-04-27: V1.3.0: Transposer is an object that no longer needs the passwords.
 //
 
 // This is the main program file.
@@ -62,7 +63,7 @@ const maxNumPasswords = 30
 const fmtEncodedFileOperation = `%s file '%s' with %s encoding`
 
 // myVersion contains the version of this program. Update it when anything changes.
-const myVersion = `1.2.0`
+const myVersion = `1.3.0`
 
 // mainMsgBase is the base number for program messages.
 const mainMsgBase = 10
@@ -118,6 +119,10 @@ func realMain() int {
 		return printUsageError(mainMsgBase+4, err.Error())
 	}
 
+	transposer := transposition.New[rune](passwords)
+
+	passwords = nil // Passwords is no longer needed after the previous statement.
+
 	// 3. Loop through input files.
 	for _, inputFilePath := range inputFiles {
 		// 3.1 Probe file, whether it has a BOM.
@@ -126,11 +131,13 @@ func realMain() int {
 		var hasBom bool
 		fileBomEncodingName, hasBom, err = encodinghelper.ProbeFile(inputFilePath)
 		if err != nil {
+			transposer.Destroy()
 			return printProcessingError(mainMsgBase+5, err.Error())
 		}
 
 		// If it has a BOM and the input encoding is different from it, change the input encoding.
-		if len(fileBomEncodingName) != 0 && fileBomEncodingName != inputEncodingName {
+		if len(fileBomEncodingName) != 0 &&
+			fileBomEncodingName != inputEncodingName {
 			actInputEncodingName = fileBomEncodingName
 		}
 
@@ -147,15 +154,16 @@ func realMain() int {
 			toLower,
 			paramOnlyLetters)
 		if err != nil {
+			transposer.Destroy()
 			return printProcessingError(mainMsgBase+7, err.Error())
 		}
 
 		// 3.3 Transpose the input runes.
 		var resultContent []rune
 		if doEncrypt {
-			resultContent = transposition.TransposeMultiplePasswords(inputContent, passwords)
+			resultContent = transposer.Transpose(inputContent)
 		} else {
-			resultContent = transposition.UntransposeMultiplePasswords(inputContent, passwords)
+			resultContent = transposer.Untranspose(inputContent)
 		}
 
 		// 3.4 Write the output file with the correct encoding.
@@ -169,9 +177,12 @@ func realMain() int {
 			resultContent)
 
 		if err != nil {
+			transposer.Destroy()
 			return printProcessingError(mainMsgBase+9, err.Error())
 		}
 	}
+
+	transposer.Destroy()
 
 	return rcOK
 }

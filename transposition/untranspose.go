@@ -20,7 +20,7 @@
 //
 // Author: Frank Schwab
 //
-// Version: 4.0.0
+// Version: 5.0.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
@@ -28,20 +28,41 @@
 //    2025-03-17: V2.1.0: Use clear.
 //    2025-03-23: V3.0.0: Refactored interface.
 //    2025-03-23: V4.0.0: Make generic.
+//    2025-04-27: V5.0.0: Use object.
 //
 
 package transposition
 
 import (
-	"slices"
 	"sync"
 )
 
-// UntransposeToTarget reverts a transposition with the given password to the given target.
-func UntransposeToTarget[S ~[]T, T any](target S, source S, password string) {
+// ******** Public functions ********
+
+// Untranspose untransposes a slice.
+// Side effects: Source is overwritten if there is more than one password.
+// The list of passwords is reversed.
+func (r *Transposition[T]) Untranspose(source []T) []T {
+	result := make([]T, len(source))
+
+	from := result
+	to := source
+	maxIndex := len(r.orders) - 1
+	for i := range r.orders {
+		from, to = to, from
+
+		untransposeToTarget(to, from, r.orders[maxIndex-i])
+	}
+
+	return to
+}
+
+// ******** Private functions ********
+
+// untransposeToTarget reverts a transposition with the given password to the given target.
+func untransposeToTarget[T any](target []T, source []T, offsets []int) {
 	sourceLen := len(source)
 
-	offsets := columnOrder(password)
 	transposeLen := len(offsets)
 
 	var wg sync.WaitGroup
@@ -55,44 +76,13 @@ func UntransposeToTarget[S ~[]T, T any](target S, source S, password string) {
 	}
 
 	wg.Wait()
-
-	clear(offsets)
 }
-
-// Untranspose untransposes a slice with the given password.
-func Untranspose[S ~[]T, T any](source S, password string) S {
-	result := make(S, len(source))
-	UntransposeToTarget(result, source, password)
-	return result
-}
-
-// UntransposeMultiplePasswords transposes a slice with multiple passwords.
-// Side effects: Source is overwritten, if there is more than one password.
-// The list of passwords is reversed.
-func UntransposeMultiplePasswords[S ~[]T, T any](source S, passwords []string) S {
-	result := make(S, len(source))
-
-	// Passwords must be applied in reverse for untransposition.
-	slices.Reverse(passwords)
-
-	from := result
-	to := source
-	for _, password := range passwords {
-		from, to = to, from
-
-		UntransposeToTarget(to, from, password)
-	}
-
-	return to
-}
-
-// ******** Private functions ********
 
 // untransposeColumn untransposes a column.
-func untransposeColumn[S ~[]T, T any](
+func untransposeColumn[T any](
 	wg *sync.WaitGroup,
-	to S,
-	from S,
+	to []T,
+	from []T,
 	sourceLen int,
 	transposeLen int,
 	offset int,

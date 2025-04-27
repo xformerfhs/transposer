@@ -148,8 +148,8 @@ func checkCommandlineFlags(doEncrypt bool) error {
 		return err
 	}
 
+	// 4. If encrypting, check conversion string.
 	if doEncrypt {
-		// 3. Check conversion string for encryption.
 		if len(paramConversion) != 0 {
 			err = processConversionFlag()
 			if err != nil {
@@ -170,9 +170,11 @@ func processConversionFlag() error {
 		case 'l':
 			useConversion = true
 			toLower = true
+
 		case 'u':
 			useConversion = true
 			toLower = false
+
 		default:
 			return fmt.Errorf(`unknown conversion: '%s'`, paramConversion)
 		}

@@ -20,7 +20,7 @@
 //
 // Author: Frank Schwab
 //
-// Version: 4.0.0
+// Version: 5.0.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
@@ -28,6 +28,7 @@
 //    2025-03-17: V2.1.0: Use clear.
 //    2025-03-23: V3.0.0: Refactored interface.
 //    2025-03-23: V4.0.0: Make generic.
+//    2025-04-27: V5.0.0: Use object.
 //
 
 package transposition
@@ -38,11 +39,27 @@ import (
 
 // ******** Public functions ********
 
-// TransposeToTarget transposes a slice with the given password to the given target.
-func TransposeToTarget[S ~[]T, T any](target S, source S, password string) {
+// Transpose transposes a slice.
+// Side effect: Source is overwritten if there is more than one password.
+func (r *Transposition[T]) Transpose(source []T) []T {
+	result := make([]T, len(source))
+	from := result
+	to := source
+	for _, offsets := range r.orders {
+		from, to = to, from
+
+		transposeToTarget(to, from, offsets)
+	}
+
+	return to
+}
+
+// ******** Private functions ********
+
+// transposeToTarget transposes a slice with the given password to the given target.
+func transposeToTarget[T any](target []T, source []T, offsets []int) {
 	sourceLen := len(source)
 
-	offsets := columnOrder(password)
 	transposeLen := len(offsets)
 
 	var wg sync.WaitGroup
@@ -56,39 +73,13 @@ func TransposeToTarget[S ~[]T, T any](target S, source S, password string) {
 	}
 
 	wg.Wait()
-
-	clear(offsets)
 }
-
-// Transpose transposes a slice with the given password.
-func Transpose[S ~[]T, T any](source S, password string) S {
-	result := make(S, len(source))
-	TransposeToTarget(result, source, password)
-	return result
-}
-
-// TransposeMultiplePasswords transposes a slice with multiple passwords.
-// Side effect: Source is overwritten, if there is more than one password.
-func TransposeMultiplePasswords[S ~[]T, T any](source S, passwords []string) S {
-	result := make(S, len(source))
-	from := result
-	to := source
-	for _, password := range passwords {
-		from, to = to, from
-
-		TransposeToTarget(to, from, password)
-	}
-
-	return to
-}
-
-// ******** Private functions ********
 
 // transposeColumn transposes a column.
-func transposeColumn[S ~[]T, T any](
+func transposeColumn[T any](
 	wg *sync.WaitGroup,
-	to S,
-	from S,
+	to []T,
+	from []T,
 	sourceLen int,
 	transposeLen int,
 	offset int,
