@@ -44,6 +44,13 @@ import (
 )
 
 // ReadRunes reads runes from the given file and filters and converts the runes.
+// The function returns the filtered and converted runes and a flag indicating
+// if the file contained Windows line breaks.
+// If the file size is larger than the maximum file size, the function returns an error.
+// If the file cannot be opened or read, the function returns an error.
+// The encoding of the file is given.
+// If doConversion is true, the runes are converted to upper case or lower case, depending on the value of toLower.
+// If onlyLetters is true, only letters are read.
 func ReadRunes(
 	path string,
 	maxFileSize int64,
@@ -72,9 +79,9 @@ func ReadRunes(
 			return nil, false, err
 		}
 
-		// Do not read carriage return if followed by new line.
+		// Do not read carriage return if followed by a new line.
 		if r != carriageReturn {
-			// But read it, if it is not followed by new line.
+			// But read it if it is not followed by a new line.
 			if hadCarriageReturn {
 				if r != lineFeed {
 					result[i] = carriageReturn
@@ -124,9 +131,9 @@ func prepareFileForReading(path string, maxFileSize int64, encodingName string) 
 	result := make([]rune, fileSize)
 
 	// The encoding for reading must always cope with BOMs, when applicable.
-	encoded, _, _ := encodinghelper.TranslateEncoding(encodingName, true)
+	encoder, _, _ := encodinghelper.TranslateEncoding(encodingName, true)
 
-	return result, bufio.NewReader(transform.NewReader(f, encoded.NewDecoder())), f, nil
+	return result, bufio.NewReader(transform.NewReader(f, encoder.NewDecoder())), f, nil
 }
 
 // checkSize checks if the given file is not greater than the maximum file size.

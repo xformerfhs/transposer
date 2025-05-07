@@ -37,6 +37,13 @@ import (
 	"transposer/filehelper"
 )
 
+// WriteEncoded writes the given data to the given file path using the given encoding.
+// The encoding must always cope with BOMs, when applicable.
+// If useWindowsLineBreaks is true, line breaks are written as carriage returns followed by line feeds.
+// If useWindowsLineBreaks is false, line breaks are written as line feeds.
+// If useBom is true, a BOM is written.
+// If useBom is false, no BOM is written.
+// The function returns an error if writing failed.
 func WriteEncoded(
 	path string,
 	encodingName string,

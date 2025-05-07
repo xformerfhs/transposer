@@ -54,18 +54,18 @@ func (l *SortedRuneList) Insert(index int, value rune) {
 	// 1. Create the new node.
 	newNode := &node{prev: nil, next: nil, value: value, index: index}
 
-	// 2. If list is empty, start it with the new node.
+	// 2. If the list is empty, start it with the new node.
 	if l.head == nil {
 		l.head = newNode
 		l.tail = newNode
-		l.length++
+		l.length = 1
 		return
 	}
 
-	// 3. List is not empty. Insert new node in list.
+	// 3. The List is not empty. Insert the new node in the list.
 	insertNode(l.tail, newNode)
 
-	// 4. Set new head or tail, if necessary.
+	// 4. Set the new head or tail, if necessary.
 	if newNode.prev == nil {
 		l.head = newNode
 	}
@@ -112,7 +112,8 @@ func (l *SortedRuneList) ValueOrderedIndices() []int {
 
 	var i int
 	l.ResetPosition()
-	for ri := 0; !l.IsEndOfList(); ri++ {
+	length := l.length
+	for ri := 0; ri < length; ri++ {
 		i, _ = l.GetNext()
 		result[ri] = i
 	}
@@ -124,11 +125,11 @@ func (l *SortedRuneList) ValueOrderedIndices() []int {
 
 // insertNode insert the new node beginning from the tail.
 func insertNode(tail *node, new *node) {
-	// Why from the last element? If there is a node that has the same value
+	// Why from the last element? If there is a node that has the same value,
 	// the new element has to be put *after* that one.
 	current := tail
 
-	// Loop through list to see where to insert the new node.
+	// Loop through the list to see where to insert the new node.
 	for {
 		// 1. If the new value is greater or equal to the current value, append it to the current node.
 		if new.value >= current.value {
@@ -137,7 +138,7 @@ func insertNode(tail *node, new *node) {
 			break
 		}
 
-		// 2. If there has been no place to insert the new node, yet and there is no
+		// 2. If there has been no place to insert the new node yet and there is no
 		//    previous node, prepend the new node to the current one.
 		if current.prev == nil {
 			current.prepend(new)
@@ -145,7 +146,7 @@ func insertNode(tail *node, new *node) {
 			break
 		}
 
-		// 3. Move forward, if no place found, yet and there is a previous node.
+		// 3. Move forward if no place is found, yet and there is a previous node.
 		current = current.prev
 	}
 }

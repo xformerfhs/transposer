@@ -48,7 +48,7 @@ import (
 // ******** Private constants ********
 
 // maxFileSize is the maximum size of a text file.
-const maxFileSize = 10_000_000
+const maxFileSize = 100_000_000
 
 // minPasswordLen is the minimum length of one password.
 const minPasswordLen = 6
