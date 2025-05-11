@@ -29,5 +29,7 @@
 // Package encodedfile contains functions to read and write text files with different encodings.
 package encodedfile
 
+// ******** Private constants ********
+
 const carriageReturn = '\r'
 const lineFeed = '\n'

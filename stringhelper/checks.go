@@ -32,6 +32,8 @@ package stringhelper
 
 import "unicode"
 
+// ******** Public functions ********
+
 // IsAlphaNumeric reports whether the supplied string contains only letters and digits.
 func IsAlphaNumeric(s string) bool {
 	for _, c := range s {

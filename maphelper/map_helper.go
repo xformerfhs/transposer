@@ -33,6 +33,8 @@ import (
 	"slices"
 )
 
+// ******** Public functions ********
+
 // Keys returns the keys of the map m.
 // The keys will be in an indeterminate order.
 // This is a copy of golang.org/x/exp/maps.Keys to get rid of the

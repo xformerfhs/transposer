@@ -37,6 +37,8 @@ import (
 	"strings"
 )
 
+// ******** Public functions ********
+
 // CloseWithName closes a NameCloser and prints an error message if closing failed.
 func CloseWithName(c NameCloser) {
 	err := c.Close()

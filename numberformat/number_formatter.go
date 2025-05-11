@@ -60,7 +60,7 @@ func FormatInt64WithSeparator(n int64, separator byte) string {
 	var positiveNumber uint64
 	isNegative := n < 0
 	if isNegative {
-		// The minimum int64 value can not be made positive, so this is handled on its own.
+		// The minimum int64 value cannot be made positive, so this is handled on its own.
 		if n != math.MinInt64 {
 			positiveNumber = uint64(-n)
 		} else {

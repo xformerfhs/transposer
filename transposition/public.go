@@ -35,7 +35,7 @@ type Transposition[T any] struct {
 	orders [][]int
 }
 
-// ******** Public creation functions ********
+// ******** Public creation and destruction functions ********
 
 // New creates a new transposition object.
 func New[T any](passwords []string) *Transposition[T] {

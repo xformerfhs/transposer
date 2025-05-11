@@ -6,7 +6,7 @@
 // with type parameters.
 
 // This is a copy of golang.org/x/exp/constraints to get rid of the
-// golang.org/x/exp dependency which contains a lot of weird stuff.
+// golang.org/x/exp dependency, which contains a lot of weird stuff.
 
 package constraints
 
