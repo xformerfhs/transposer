@@ -20,11 +20,12 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.1.0
+// Version: 1.2.0
 //
 // Change history:
 //    2025-03-16: V1.0.0: Created.
 //    2025-03-23: V1.1.0: Adapt to new interface.
+//    2025-04-13: V1.2.0: More known tests.
 //
 
 // Package transposition_test contains tests for transpositions.
@@ -81,6 +82,30 @@ func buildRandomPassword(l int) string {
 }
 
 // ******** Test functions ********
+
+// TestTransposeSimpleKnown transposes a known source and compares the result with the known result.
+func TestTransposeFullLastRow(t *testing.T) {
+	source := []byte(`ABCDEFGHIKLMNOPQRSTUVWXYZ`)
+	expected := []byte(`EKPUZBGMRWAFLQVCHNSXDIOTY`)
+	transpose := transposition.New[byte]([]string{`pique`})
+	transposed := transpose.Transpose(source)
+	if !slices.Equal(transposed, expected) {
+		t.Fatalf(fmtExpectedActual, expected, transposed)
+	}
+	transpose.Destroy()
+}
+
+// TestTransposeSimpleKnown transposes a known source and compares the result with the known result.
+func TestTransposeSimpleKnown(t *testing.T) {
+	source := []byte(`ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`)
+	expected := []byte(`PtWCgHlRvYDhKoUyZFjMqJnQuaBfLpSwbEiOsTxdGkVzcImNrXAe`)
+	transpose := transposition.New[byte]([]string{`wonder`, `charm`})
+	transposed := transpose.Transpose(source)
+	if !slices.Equal(transposed, expected) {
+		t.Fatalf(fmtExpectedActual, expected, transposed)
+	}
+	transpose.Destroy()
+}
 
 // TestTransposeKnown transposes a known source and compares the result with the known result.
 func TestTransposeKnown(t *testing.T) {

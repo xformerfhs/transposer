@@ -29,6 +29,7 @@
 //    2025-03-23: V3.0.0: Refactored interface.
 //    2025-03-23: V4.0.0: Make generic.
 //    2025-04-27: V5.0.0: Use object.
+//    2025-08-13: V5.1.0: Precompute destination indices.
 //
 
 package transposition
@@ -45,10 +46,10 @@ func (r *Transposition[T]) Transpose(source []T) []T {
 	result := make([]T, len(source))
 	from := result
 	to := source
-	for _, offsets := range r.orders {
+	for _, order := range r.orders {
 		from, to = to, from
 
-		transposeToTarget(to, from, offsets)
+		transposeToTarget(to, from, order)
 	}
 
 	return to
@@ -57,19 +58,17 @@ func (r *Transposition[T]) Transpose(source []T) []T {
 // ******** Private functions ********
 
 // transposeToTarget transposes a slice with the given password to the given target.
-func transposeToTarget[T any](target []T, source []T, offsets []int) {
+func transposeToTarget[T any](target []T, source []T, order []int) {
 	sourceLen := len(source)
 
-	transposeLen := len(offsets)
+	orderLen := len(order)
 
 	var wg sync.WaitGroup
-	destinationIndex := 0
-	for _, offset := range offsets {
+	destinationIndices := buildColumnTargetIndices(sourceLen, order, orderLen)
+	for i := range orderLen {
 		// Transpose each column in parallel.
 		wg.Add(1)
-		go transposeColumn(&wg, target, source, sourceLen, transposeLen, offset, destinationIndex)
-
-		destinationIndex += columnLen(sourceLen, transposeLen, offset)
+		go transposeColumn(&wg, target, source, sourceLen, orderLen, i, destinationIndices[i])
 	}
 
 	wg.Wait()

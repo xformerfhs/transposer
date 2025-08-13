@@ -51,13 +51,22 @@ func columnOrder(source string) []int {
 	return orderList.ValueOrderedIndices()
 }
 
-// columnLen calculates the length of the column starting at the given offset.
-func columnLen(sourceLen int, transposeLen int, offset int) int {
-	sourceLen = sourceLen - offset
-	result := sourceLen / transposeLen
-	remainder := sourceLen - (result * transposeLen)
-	if remainder > 0 {
-		result++
+// buildColumnTargetIndices builds the start indices for each destination column in the transposed array.
+func buildColumnTargetIndices(sourceLen int, order []int, orderLen int) []int {
+	result := make([]int, orderLen)
+
+	columnLen := sourceLen / orderLen
+	supOverflowColumn := sourceLen % orderLen
+
+	destinationIndex := 0
+	for i := 0; i < orderLen; i++ {
+		var columnIndex = order[i]
+		result[columnIndex] = destinationIndex
+
+		destinationIndex += columnLen
+		if columnIndex < supOverflowColumn {
+			destinationIndex++ // Add one more for the overflow columns
+		}
 	}
 
 	return result

@@ -29,6 +29,7 @@
 //    2025-03-23: V3.0.0: Refactored interface.
 //    2025-03-23: V4.0.0: Make generic.
 //    2025-04-27: V5.0.0: Use object.
+//    2025-08-13: V5.1.0: Precompute destination indices.
 //
 
 package transposition
@@ -60,19 +61,17 @@ func (r *Transposition[T]) Untranspose(source []T) []T {
 // ******** Private functions ********
 
 // untransposeToTarget reverts a transposition with the given password to the given target.
-func untransposeToTarget[T any](target []T, source []T, offsets []int) {
+func untransposeToTarget[T any](target []T, source []T, order []int) {
 	sourceLen := len(source)
 
-	transposeLen := len(offsets)
+	orderLen := len(order)
 
 	var wg sync.WaitGroup
-	sourceIndex := 0
-	for _, offset := range offsets {
+	sourceIndices := buildColumnTargetIndices(sourceLen, order, orderLen)
+	for i := range orderLen {
 		// Untranspose each column in parallel.
 		wg.Add(1)
-		go untransposeColumn(&wg, target, source, sourceLen, transposeLen, offset, sourceIndex)
-
-		sourceIndex += columnLen(sourceLen, transposeLen, offset)
+		go untransposeColumn(&wg, target, source, sourceLen, orderLen, i, sourceIndices[i])
 	}
 
 	wg.Wait()
