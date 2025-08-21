@@ -21,11 +21,68 @@ This is the easiest form of a transposition.
 There are other ones.
 This program implements the line-by-line to column-by-column transposition.
 
-A secure transposition cipher needs multiple transpositions.
-I.e., the transposed characters need to be transposed again (probably several times).
-A single transposition leaves too much structure in the transposed characters.
+It works like this:
+
+1. One chooses a password.
+2. It is used as the the header of a table, that has as many columns as the password has letters.
+3. Then one assigns a number to each letter of the password which corresponds to the order of the letter in the word according to the alphabet.
+4. The text is filled into the table from left to right and top to bottom.
+5. Then the text is read out in **columns** in the order that is given by the number beneath each letter of the password.
+
+Here is an example:
+
+Let the password be `SCHILLER`.
+
+This is written as the header of a table:
+
+| **S** | **C** | **H** | **I** | **L** | **L** | **E** | **R** |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+|  |  |  |  |  |  |  |  |
+
+Then the order of the letter according to the alphabet is written under each letter of the password:
+
+| **S** | **C** | **H** | **I** | **L** | **L** | **E** | **R** |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| **8** | **1** | **3** | **4** | **5** | **6** | **2** | **7** |
+|  |  |  |  |  |  |  |  |
+
+
+This means:
+- `C` comes first in the alphabet.
+- `E` comes next.
+- Then `H`
+
+and so on until the `S` which comes last when the letters of the password are ordered according to the alphabet.
+
+Then the text is filled into the table.
+We assume a very simple clear text: `ABCDEFGHIJKLMNOPQRSTUVWXYZ`.
+
+The table then looks like this:
+
+| **S** | **C** | **H** | **I** | **L** | **L** | **E** | **R** |
+| :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| **8** | **1** | **3** | **4** | **5** | **6** | **2** | **7** |
+| A | B | C | D | E | F | G | H |
+| I | J | K | L | M | N | O | P |
+| Q | R | S | T | U | V | W | X |
+| Y | Z |   |   |   |   |   |   |
+
+Then the text is read out in column order and becomes: `BJRZGOWCKSDLTEMUFNVHPXAIQY`.
+
+It`s is as easy as that!
+
+However, this is easily cracked, as well.
+Take, for example, the clear text letters `ABCDEFGH`.
+They end up at positions 1, 5, 8, 11, 14, 17, 20, 23.
+The differences between these positions are 4, 3, 3, 3, 3, 3, 3.
+This regular spacing makes it easy to reverse the transposition.
+
+Transpositions can be chained.
+I.e., one can take the text just produced and feed it into another transposition.
+This will make it much harder to reverse the transposition.
 So, this program allows for multiple passwords which means multiple transpositions.
 
+However, this is only the case, when the lengths of the passwords do not have a common factor.
 For this to work securely, it is necessary that the lengths of the passwords must not have a common factor.
 Here is an example:
 Assume that the two passwords `abcdef` and `anotherone` are used.
@@ -34,6 +91,15 @@ These lengths have a factor in common:
 Both lengths are divisible by 2.
 This common factor means that the combined transposition with both passwords also has this common factor in the transposed characters.
 This weakens the encryption considerably.
+
+Decrypting works the other way around.
+I.e. one fills the encrypted text column-wise into the table with the order of the columns assigned by their numbers.
+Then one reads the decrypted text as the rows from top to bottom.
+
+In this example two columns have the length 4 and 6 have length 3.
+How does one know how long a specific column is?
+As the total length of the encrypted text is known, it is also known how long the last row is.
+So it is also known which columns are longer than the others.
 
 Using passwords with lengths that have a common factor will produce an error message.
 
