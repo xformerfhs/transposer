@@ -293,16 +293,6 @@ This leads to the following two error messages:
 - The security strength depends on the complexity and length of the passwords.
 - Using multiple passwords increases security.
 
-## Challenge
-
-There is a file `Challenge_trans.txt` in the `challenge` directory.
-This file has been created by encrypting a German text encoded in UTF-8 with three passwords.
-The passwords were not random and none of them is longer than 29 characters.
-
-If anyone is able to decrypt this file and tell me its correct clear text, I would be very much interested in how this has been done.
-Guessing the clear text does not count.
-There has to be an algorithm that does only use the file and the information given about the passwords.
-
 ## Contact
 
 Frank Schwab ([Mail](mailto:github.sfdhi@slmails.com "Mail"))
