@@ -31,5 +31,10 @@ package encodedfile
 
 // ******** Private constants ********
 
+// New line characters.
+
+// carriageReturn is the ASCII carriage return character.
 const carriageReturn = '\r'
+
+// lineFeed is the ASCII line feed character.
 const lineFeed = '\n'

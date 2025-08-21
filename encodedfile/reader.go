@@ -20,12 +20,13 @@
 //
 // Author: Frank Schwab
 //
-// Version: 3.0.0
+// Version: 3.1.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
 //    2025-03-14: V2.0.0: Replaced different Read functions with just one with filter and converter.
 //    2025-03-14: V3.0.0: Removed filter and converter and use flags, as it is faster.
+//    2025-08-21: V3.1.0: Do not waste memory with UTF-16 encodings.
 //
 
 package encodedfile
@@ -34,13 +35,15 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"golang.org/x/text/transform"
 	"io"
 	"os"
+	"strings"
 	"transposer/encodinghelper"
 	"transposer/filehelper"
 	"transposer/numberformat"
 	"unicode"
+
+	"golang.org/x/text/transform"
 )
 
 // ReadRunes reads runes from the given file and filters and converts the runes.
@@ -128,10 +131,14 @@ func prepareFileForReading(path string, maxFileSize int64, encodingName string) 
 		return nil, nil, nil, err
 	}
 
-	result := make([]rune, fileSize)
+	resultSize := int(fileSize)
+	if strings.HasPrefix(encodingName, `utf16`) {
+		resultSize >>= 1
+	}
+	result := make([]rune, resultSize)
 
 	// The encoding for reading must always cope with BOMs, when applicable.
-	encoder, _, _ := encodinghelper.TranslateEncoding(encodingName, true)
+	encoder, _, _ := encodinghelper.EncodingForName(encodingName, true)
 
 	return result, bufio.NewReader(transform.NewReader(f, encoder.NewDecoder())), f, nil
 }

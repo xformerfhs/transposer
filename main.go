@@ -28,6 +28,7 @@
 //    2025-04-20: V1.2.0: Count runes in passwords, not bytes.
 //    2025-04-27: V1.3.0: Transposer is an object that no longer needs the passwords.
 //    2025-08-13: V1.3.1: Simplified transposition.
+//    2025-08-21: V1.4.0: Handle UTF-32, less waste of memory with UTF-16.
 //
 
 // This is the main program file.
@@ -64,7 +65,7 @@ const maxNumPasswords = 30
 const fmtEncodedFileOperation = `%s file '%s' with %s encoding`
 
 // myVersion contains the version of this program. Update it when anything changes.
-const myVersion = `1.3.1`
+const myVersion = `1.4.0`
 
 // mainMsgBase is the base number for program messages.
 const mainMsgBase = 10
@@ -136,10 +137,17 @@ func realMain() int {
 			return printProcessingError(mainMsgBase+5, err.Error())
 		}
 
-		// If it has a BOM and the input encoding is different from it, change the input encoding.
-		if len(fileBomEncodingName) != 0 &&
-			fileBomEncodingName != inputEncodingName {
-			actInputEncodingName = fileBomEncodingName
+		if hasBom {
+			// If it has a BOM and the input encoding is UTF-32, return an error.
+			if strings.HasPrefix(fileBomEncodingName, `utf32`) {
+				transposer.Destroy()
+				return printProcessingError(mainMsgBase+11, `UTF-32 is not supported`)
+			}
+
+			// If it has a BOM and the input encoding is different from it, change the input encoding.
+			if fileBomEncodingName != inputEncodingName {
+				actInputEncodingName = fileBomEncodingName
+			}
 		}
 
 		// 3.2 Read the input with the specified encoding and transformation options and put the

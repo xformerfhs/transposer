@@ -32,16 +32,16 @@
 package encodinghelper
 
 import (
-	"golang.org/x/text/encoding"
 	"os"
 	"transposer/filehelper"
+
+	"golang.org/x/text/encoding"
 )
 
 // ******** Public functions ********
 
 // ProbeFile reads the first bytes of a file to check for BOMs.
-// If it finds one, it returns the corresponding encoding name
-// and the BOM bytes.
+// If it finds one, it returns the corresponding encoding name.
 func ProbeFile(fileName string) (string, bool, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
@@ -51,7 +51,7 @@ func ProbeFile(fileName string) (string, bool, error) {
 
 	// 1. Read the first three bytes.
 	var readCount int
-	miniBuffer := make([]byte, 3)
+	miniBuffer := make([]byte, 4)
 	readCount, err = f.Read(miniBuffer)
 	if err != nil {
 		return ``, false, err
@@ -64,28 +64,7 @@ func ProbeFile(fileName string) (string, bool, error) {
 		return ``, false, nil
 	}
 
-	if miniBuffer[0] == utf16BeBom[0] &&
-		miniBuffer[1] == utf16BeBom[1] {
-		return `utf16be`, true, nil
-	}
-
-	if miniBuffer[0] == utf16LeBom[0] &&
-		miniBuffer[1] == utf16LeBom[1] {
-		return `utf16le`, true, nil
-	}
-
-	// File has only 2 bytes. There is no UTF-8-BOM.
-	if readCount < 3 {
-		return ``, false, nil
-	}
-
-	if miniBuffer[0] == utf8Bom[0] &&
-		miniBuffer[1] == utf8Bom[1] &&
-		miniBuffer[2] == utf8Bom[2] {
-		return `utf8`, true, nil
-	}
-
-	return ``, false, nil
+	return checkBufferForBom(miniBuffer, readCount)
 }
 
 // EncodingWithBomHandling returns an encoding with the required BOM handling.
@@ -116,4 +95,44 @@ func EncodingWithBomHandling(encodingName string, useBom bool) encoding.Encoding
 	default:
 		return textToEncoding[encodingName].encoding
 	}
+}
+
+// ******** Private functions ********
+
+// checkBufferForBom checks the first four bytes of a buffer for BOMs.
+func checkBufferForBom(buffer []byte, count int) (string, bool, error) {
+	switch buffer[0] {
+	case utf8Bom[0]:
+		if count >= 3 &&
+			buffer[1] == utf8Bom[1] &&
+			buffer[2] == utf8Bom[2] {
+			return `utf8`, true, nil
+		}
+
+	case utf16LeBom[0]:
+		if buffer[1] == utf16LeBom[1] {
+			if count >= 4 &&
+				buffer[2] == 0 &&
+				buffer[3] == 0 {
+				return `utf32le`, true, nil
+			}
+
+			return `utf16le`, true, nil
+		}
+
+	case utf16BeBom[0]:
+		if buffer[1] == utf16BeBom[1] {
+			return `utf16be`, true, nil
+		}
+
+	case 0:
+		if count >= 4 &&
+			buffer[1] == 0 &&
+			buffer[2] == utf16BeBom[0] &&
+			buffer[3] == utf16BeBom[1] {
+			return `utf32be`, true, nil
+		}
+	}
+
+	return ``, false, nil
 }

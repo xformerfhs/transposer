@@ -20,31 +20,32 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.1.0
+// Version: 3.0.0
 //
 // Change history:
 //    2024-03-10: V1.0.0: Created.
 //    2025-01-09: V1.0.1: Simplified sort call.
 //    2025-02-16: V1.1.0: Simplified name normalization.
 //    2025-03-09: V2.0.0: Expose NormalizeEncoding.
+//    2025-08-21: V3.0.0: Rename function to EncodingForName.
 //
 
 package encodinghelper
 
 import (
 	"fmt"
-	"golang.org/x/text/encoding"
 	"strings"
 	"transposer/maphelper"
 	"transposer/stringhelper"
 	"unicode"
+
+	"golang.org/x/text/encoding"
 )
 
 // ******** Public functions ********
 
-// TranslateEncoding translates a character encoding text into an encoding.Encoding
-// with the given BOM usage.
-func TranslateEncoding(encodingName string, useBom bool) (encoding.Encoding, string, error) {
+// EncodingForName gets an encoding.Encoding for the given encoding name and BOM usage.
+func EncodingForName(encodingName string, useBom bool) (encoding.Encoding, string, error) {
 	enc, exists := textToEncoding[encodingName]
 	if !exists {
 		return nil, ``, fmt.Errorf(`invalid character encoding: '%s'`, encodingName)

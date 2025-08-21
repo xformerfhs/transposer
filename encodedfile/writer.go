@@ -83,7 +83,7 @@ func prepareFileFoWriting(path string, encodingName string, useBom bool) (*bufio
 		return nil, nil, err
 	}
 
-	encoded, _, _ := encodinghelper.TranslateEncoding(encodingName, useBom)
+	encoded, _, _ := encodinghelper.EncodingForName(encodingName, useBom)
 
 	return bufio.NewWriter(transform.NewWriter(f, encoded.NewEncoder())), f, nil
 }
