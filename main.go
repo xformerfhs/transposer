@@ -141,7 +141,7 @@ func realMain() int {
 			// If it has a BOM and the input encoding is UTF-32, return an error.
 			if strings.HasPrefix(fileBomEncodingName, `utf32`) {
 				transposer.Destroy()
-				return printProcessingError(mainMsgBase+11, `UTF-32 is not supported`)
+				return printProcessingError(mainMsgBase+6, `UTF-32 is not supported`)
 			}
 
 			// If it has a BOM and the input encoding is different from it, change the input encoding.
@@ -152,7 +152,7 @@ func realMain() int {
 
 		// 3.2 Read the input with the specified encoding and transformation options and put the
 		//     result in a rune slice.
-		logger.PrintInfof(mainMsgBase+6, fmtEncodedFileOperation, `Read`, inputFilePath, actInputEncodingName)
+		logger.PrintInfof(mainMsgBase+7, fmtEncodedFileOperation, `Read`, inputFilePath, actInputEncodingName)
 		var inputContent []rune
 		var useWindowsLineBreak bool
 		inputContent, useWindowsLineBreak, err = encodedfile.ReadRunes(
@@ -164,7 +164,7 @@ func realMain() int {
 			paramOnlyLetters)
 		if err != nil {
 			transposer.Destroy()
-			return printProcessingError(mainMsgBase+7, err.Error())
+			return printProcessingError(mainMsgBase+8, err.Error())
 		}
 
 		// 3.3 Transpose the input runes.
@@ -177,7 +177,7 @@ func realMain() int {
 
 		// 3.4 Write the output file with the correct encoding.
 		outputFilePath := BuildOutFilePath(doEncrypt, inputFilePath)
-		logger.PrintInfof(mainMsgBase+8, fmtEncodedFileOperation, `Write`, outputFilePath, outputEncodingName)
+		logger.PrintInfof(mainMsgBase+9, fmtEncodedFileOperation, `Write`, outputFilePath, outputEncodingName)
 		err = encodedfile.WriteEncoded(
 			outputFilePath,
 			outputEncodingName,
@@ -187,7 +187,7 @@ func realMain() int {
 
 		if err != nil {
 			transposer.Destroy()
-			return printProcessingError(mainMsgBase+9, err.Error())
+			return printProcessingError(mainMsgBase+10, err.Error())
 		}
 	}
 
@@ -204,7 +204,7 @@ func checkCommand() (bool, int, bool) {
 	cmd := strings.ToLower(strings.TrimSpace(os.Args[1]))[0]
 
 	if cmd != 'd' && cmd != 'e' && cmd != 'h' && cmd != 'v' {
-		return false, printUsageErrorf(mainMsgBase+10, `Invalid command: '%s'`, os.Args[1]), true
+		return false, printUsageErrorf(mainMsgBase+11, `Invalid command: '%s'`, os.Args[1]), true
 	}
 
 	// Print help
