@@ -69,7 +69,7 @@ The table then looks like this:
 
 Then the text is read out in column order and becomes: `BJRZGOWCKSDLTEMUFNVHPXAIQY`.
 
-It`s is as easy as that!
+It`s as easy as that!
 
 However, this is easily cracked, as well.
 Take, for example, the clear text letters `ABCDEFGH`.
