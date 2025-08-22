@@ -353,6 +353,7 @@ This leads to the following two error messages:
 - When using multiple passwords, remember their order.
 - The letters-only option is irreversible — removed characters cannot be restored.
 - Make sure to use the same options during decryption as used during encryption.
+- Inserting characters into or removing characters from the encrypted text makes it impossible to decrypt the text.
 
 ## Security Considerations
 
