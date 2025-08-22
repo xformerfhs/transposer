@@ -20,7 +20,7 @@
 //
 // Author: Frank Schwab
 //
-// Version: 1.3.1
+// Version: 1.5.0
 //
 // Change history:
 //    2025-03-12: V1.0.0: Created.
@@ -29,6 +29,7 @@
 //    2025-04-27: V1.3.0: Transposer is an object that no longer needs the passwords.
 //    2025-08-13: V1.3.1: Simplified transposition.
 //    2025-08-21: V1.4.0: Handle UTF-32, less waste of memory with UTF-16.
+//    2025-08-21: V1.5.0: Refactored realMain with the help of JetBrains AI (GPT-5).
 //
 
 // This is the main program file.
@@ -65,13 +66,33 @@ const maxNumPasswords = 30
 const fmtEncodedFileOperation = `%s file '%s' with %s encoding`
 
 // myVersion contains the version of this program. Update it when anything changes.
-const myVersion = `1.4.0`
+const myVersion = `1.5.0`
 
 // mainMsgBase is the base number for program messages.
 const mainMsgBase = 10
 
 // myName contains the name of the executable of this program.
 var myName = filehelper.RealBaseName(os.Args[0])
+
+// ******** Private structures ********
+
+// appConfig contains the configuration of the program.
+// It is built from the command line arguments and the configuration file.
+// It is used to build the transposer and to process the input files.
+type appConfig struct {
+	doEncrypt          bool
+	inputEncodingName  string
+	outputEncodingName string
+	handleBom          BomHandling
+}
+
+// ******** Private interfaces ********
+
+// runeTransposer is an interface for transposition of runes.
+type runeTransposer interface {
+	Transpose([]rune) []rune
+	Untranspose([]rune) []rune
+}
 
 // ******** Main functions ********
 
@@ -84,119 +105,128 @@ func main() {
 // realMain is the real main program. It has an exit code and obeys defers.
 // This is how a main function should be.
 func realMain() int {
-	// 1. Process commands.
-	defineCommandlineFlags()
-
-	if len(os.Args) < 2 {
-		return printUsageError(mainMsgBase+0, `No command specified`)
-	}
-
-	doEncrypt, rc, done := checkCommand()
+	// 1. Parse, validate, and build config.
+	cfg, rc, done := parseAndValidate()
 	if done {
 		return rc
 	}
 
-	err := processCommandlineFlags(doEncrypt)
-	if err != nil {
-		return printUsageError(mainMsgBase+1, err.Error())
-	}
-
-	err = checkCommandlineFlags(doEncrypt)
-	if err != nil {
-		return printUsageError(mainMsgBase+2, err.Error())
-	}
-
-	errorList := NormalizeAndCheckPasswords(passwords)
-	if len(errorList) != 0 {
-		return printParameterErrorList(mainMsgBase+3, `Password error`, errorList)
-	}
-
-	// 2. Process command line arguments.
-	var inputEncodingName string
-	var outputEncodingName string
-	var handleBom BomHandling
-
-	inputEncodingName, outputEncodingName, handleBom, err = GetEncodings(paramFileEncoding)
-	if err != nil {
-		return printUsageError(mainMsgBase+4, err.Error())
-	}
-
+	// 2. Prepare transposer once and ensure cleanup.
 	transposer := transposition.New[rune](passwords)
-
 	passwords = nil // Passwords is no longer needed after the previous statement.
+	defer transposer.Destroy()
 
-	// 3. Loop through input files.
+	// 3. Process all input files.
 	for _, inputFilePath := range inputFiles {
-		// 3.1 Probe file, whether it has a BOM.
-		actInputEncodingName := inputEncodingName
-		var fileBomEncodingName string
-		var hasBom bool
-		fileBomEncodingName, hasBom, err = encodinghelper.ProbeFile(inputFilePath)
-		if err != nil {
-			transposer.Destroy()
-			return printProcessingError(mainMsgBase+5, err.Error())
-		}
-
-		if hasBom {
-			// If it has a BOM and the input encoding is UTF-32, return an error.
-			if strings.HasPrefix(fileBomEncodingName, `utf32`) {
-				transposer.Destroy()
-				return printProcessingError(mainMsgBase+6, `UTF-32 is not supported`)
-			}
-
-			// If it has a BOM and the input encoding is different from it, change the input encoding.
-			if fileBomEncodingName != inputEncodingName {
-				actInputEncodingName = fileBomEncodingName
-			}
-		}
-
-		// 3.2 Read the input with the specified encoding and transformation options and put the
-		//     result in a rune slice.
-		logger.PrintInfof(mainMsgBase+7, fmtEncodedFileOperation, `Read`, inputFilePath, actInputEncodingName)
-		var inputContent []rune
-		var useWindowsLineBreak bool
-		inputContent, useWindowsLineBreak, err = encodedfile.ReadRunes(
-			inputFilePath,
-			maxFileSize,
-			actInputEncodingName,
-			useConversion,
-			toLower,
-			paramOnlyLetters)
-		if err != nil {
-			transposer.Destroy()
-			return printProcessingError(mainMsgBase+8, err.Error())
-		}
-
-		// 3.3 Transpose the input runes.
-		var resultContent []rune
-		if doEncrypt {
-			resultContent = transposer.Transpose(inputContent)
-		} else {
-			resultContent = transposer.Untranspose(inputContent)
-		}
-
-		// 3.4 Write the output file with the correct encoding.
-		outputFilePath := BuildOutFilePath(doEncrypt, inputFilePath)
-		logger.PrintInfof(mainMsgBase+9, fmtEncodedFileOperation, `Write`, outputFilePath, outputEncodingName)
-		err = encodedfile.WriteEncoded(
-			outputFilePath,
-			outputEncodingName,
-			bomUsageForOutput(handleBom, hasBom),
-			useWindowsLineBreak,
-			resultContent)
-
-		if err != nil {
-			transposer.Destroy()
-			return printProcessingError(mainMsgBase+10, err.Error())
+		if rc = processFile(transposer, cfg, inputFilePath); rc != rcOK {
+			return rc
 		}
 	}
-
-	transposer.Destroy()
 
 	return rcOK
 }
 
 // ******** Private functions ********
+
+// parseAndValidate parses the command line arguments, validates them, and builds the config.
+func parseAndValidate() (*appConfig, int, bool) {
+	defineCommandlineFlags()
+
+	result := &appConfig{}
+
+	if len(os.Args) < 2 {
+		return result, printUsageError(mainMsgBase+0, `No command specified`), true
+	}
+
+	doEncrypt, rc, done := checkCommand()
+	if done {
+		return result, rc, true
+	}
+	result.doEncrypt = doEncrypt
+
+	var err error
+	if err = processCommandlineFlags(doEncrypt); err != nil {
+		return result, printUsageError(mainMsgBase+1, err.Error()), true
+	}
+
+	if err = checkCommandlineFlags(doEncrypt); err != nil {
+		return result, printUsageError(mainMsgBase+2, err.Error()), true
+	}
+
+	errorList := NormalizeAndCheckPasswords(passwords)
+	if len(errorList) != 0 {
+		return result, printParameterErrorList(mainMsgBase+3, `Password error`, errorList), true
+	}
+
+	result.inputEncodingName,
+		result.outputEncodingName,
+		result.handleBom,
+		err = GetEncodings(paramFileEncoding)
+	if err != nil {
+		return result, printUsageError(mainMsgBase+4, err.Error()), true
+	}
+
+	return result, rcOK, false
+}
+
+// processFile processes one input file.
+func processFile(t runeTransposer, cfg *appConfig, inputFilePath string) int {
+	// 3.1 Probe file, whether it has a BOM.
+	actInputEncodingName := cfg.inputEncodingName
+	fileBomEncodingName, hasBom, err := encodinghelper.ProbeFile(inputFilePath)
+	if err != nil {
+		return printProcessingError(mainMsgBase+5, err.Error())
+	}
+
+	if hasBom {
+		// If it has a BOM and the input encoding is UTF-32, return an error.
+		if strings.HasPrefix(fileBomEncodingName, `utf32`) {
+			return printProcessingError(mainMsgBase+6, `UTF-32 is not supported`)
+		}
+
+		// If it has a BOM and the input encoding is different from it, change the input encoding.
+		if fileBomEncodingName != cfg.inputEncodingName {
+			actInputEncodingName = fileBomEncodingName
+		}
+	}
+
+	// 3.2 Read the input with the specified encoding and transformation options and put the
+	//     result in a rune slice.
+	logger.PrintInfof(mainMsgBase+7, fmtEncodedFileOperation, `Read`, inputFilePath, actInputEncodingName)
+	inputContent, useWindowsLineBreak, err := encodedfile.ReadRunes(
+		inputFilePath,
+		maxFileSize,
+		actInputEncodingName,
+		useConversion,
+		toLower,
+		paramOnlyLetters)
+	if err != nil {
+		return printProcessingError(mainMsgBase+8, err.Error())
+	}
+
+	// 3.3 Transpose the input runes.
+	var resultContent []rune
+	if cfg.doEncrypt {
+		resultContent = t.Transpose(inputContent)
+	} else {
+		resultContent = t.Untranspose(inputContent)
+	}
+
+	// 3.4 Write the output file with the correct encoding.
+	outputFilePath := BuildOutFilePath(cfg.doEncrypt, inputFilePath)
+	logger.PrintInfof(mainMsgBase+9, fmtEncodedFileOperation, `Write`, outputFilePath, cfg.outputEncodingName)
+	err = encodedfile.WriteEncoded(
+		outputFilePath,
+		cfg.outputEncodingName,
+		bomUsageForOutput(cfg.handleBom, hasBom),
+		useWindowsLineBreak,
+		resultContent)
+	if err != nil {
+		return printProcessingError(mainMsgBase+10, err.Error())
+	}
+
+	return rcOK
+}
 
 // checkCommand checks the given command and executes it if it is 'help' or 'version'.
 // Otherwise, it only signals if the command was 'encrypt', or not.
