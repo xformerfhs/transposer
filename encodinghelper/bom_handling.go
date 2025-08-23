@@ -101,6 +101,12 @@ func EncodingWithBomHandling(encodingName string, useBom bool) encoding.Encoding
 
 // checkBufferForBom checks the first four bytes of a buffer for BOMs.
 func checkBufferForBom(buffer []byte, count int) (string, bool, error) {
+	// Suppress unnecessary bounds checks.
+	_ = buffer[3]
+	_ = utf8Bom[2]
+	_ = utf16BeBom[1]
+	_ = utf16LeBom[1]
+
 	switch buffer[0] {
 	case utf8Bom[0]:
 		if count >= 3 &&
