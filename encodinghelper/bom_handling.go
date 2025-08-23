@@ -20,13 +20,14 @@
 //
 // Author: Frank Schwab
 //
-// Version: 3.0.0
+// Version: 3.0.1
 //
 // Change history:
 //    2024-03-10: V1.0.0: Created.
 //    2025-01-19: V1.1.0: Correct handling of short files.
 //    2025-03-10: V2.0.0: Return encoding name and BOM bytes.
 //    2025-03-12: V3.0.0: Adapted to UTF BOM handling functions.
+//    2025-08-23: V3.0.1: Suppress unnecessary bounds checks.
 //
 
 package encodinghelper
